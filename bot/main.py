@@ -1,27 +1,12 @@
 import asyncio
 import logging
 
-from aiogram import Bot, Dispatcher, Router
+from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
-from aiogram.types import Message
-from aiogram.utils import markdown
 
 from bot.config import settings
-
-router = Router(name=__name__)
-
-
-@router.message(CommandStart())
-async def start_command_handler(message: Message) -> None:
-    await message.answer(
-        markdown.text(
-            f"Вас вітає {markdown.hbold(settings.bot.name)}! 👋",
-            "Давайте розпочнемо вашу фітнес-подорож разом.",
-            sep="\n",
-        )
-    )
+from bot.handlers import router
 
 
 async def main() -> None:
