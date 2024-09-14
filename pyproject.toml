@@ -3,7 +3,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "3.12.2"
-pydantic = "^2.9.1"
+aiogram = "^3.13.0"
 pydantic-settings = "^2.5.2"
 
 [tool.poetry.group.dev.dependencies]
@@ -16,4 +16,4 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["COM812", "D1", "D203", "D213", "INP", "ISC001"]
+ignore = ["COM812", "D1", "D203", "D213", "INP", "ISC001", "RUF001"]

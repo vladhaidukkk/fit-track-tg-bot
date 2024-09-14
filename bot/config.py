@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class BotSettings(BaseModel):
+    name: str = "FitTrack Bot"
     token: str
 
 
