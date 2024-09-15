@@ -45,8 +45,21 @@ async def calc_calories_survey_age_handler(message: Message, state: FSMContext) 
     age = int(message.text)
     await state.update_data(age=age)
     await state.set_state(CalcCaloriesSurvey.height)
+    await message.answer("📏 Вкажіть ваш зріст (в сантиметрах):")
 
 
 @router.message(CalcCaloriesSurvey.age, ~F.text.regexp(r"^\d+$"))
 async def calc_calories_survey_invalid_age_handler(message: Message) -> None:
-    await message.answer("⚠️ Вік повинен бути числом. Введіть його ще раз:", reply_markup=root_keyboard())
+    await message.answer("⚠️ Вік повинен бути числом. Введіть його ще раз:")
+
+
+@router.message(CalcCaloriesSurvey.height, F.text.regexp(r"^\d+$"))
+async def calc_calories_survey_height_handler(message: Message, state: FSMContext) -> None:
+    height = int(message.text)
+    await state.update_data(height=height)
+    await state.set_state(CalcCaloriesSurvey.weight)
+
+
+@router.message(CalcCaloriesSurvey.height, ~F.text.regexp(r"^\d+$"))
+async def calc_calories_survey_invalid_height_handler(message: Message) -> None:
+    await message.answer("⚠️ Зріст повинен бути числом. Введіть його ще раз:")
