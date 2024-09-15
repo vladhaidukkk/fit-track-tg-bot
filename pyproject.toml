@@ -16,4 +16,15 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["COM812", "D1", "D203", "D213", "INP", "ISC001", "RUF001"]
+ignore = [
+  "COM812",
+  "D1",
+  "D203",
+  "D213",
+  "FIX",
+  "INP",
+  "ISC001",
+  "RUF001",
+  "TD002",
+  "TD003",
+]
