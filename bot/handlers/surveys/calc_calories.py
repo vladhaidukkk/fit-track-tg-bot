@@ -4,7 +4,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
 from bot.keyboards.gender import GENDER_TO_DATA, GENDER_TO_TEXT, gender_keyboard
-from bot.keyboards.root import RootKeyboardText, root_keyboard
+from bot.keyboards.root import RootKeyboardText
 from bot.utils import get_key_by_value
 
 router = Router(name=__name__)
@@ -58,8 +58,22 @@ async def calc_calories_survey_height_handler(message: Message, state: FSMContex
     height = int(message.text)
     await state.update_data(height=height)
     await state.set_state(CalcCaloriesSurvey.weight)
+    await message.answer("⚖️ Вкажіть вашу вагу (в кілограмах):")
 
 
 @router.message(CalcCaloriesSurvey.height, ~F.text.regexp(r"^\d+$"))
 async def calc_calories_survey_invalid_height_handler(message: Message) -> None:
     await message.answer("⚠️ Зріст повинен бути числом. Введіть його ще раз:")
+
+
+@router.message(CalcCaloriesSurvey.weight, F.text.regexp(r"^\d+(\.\d+)?$"))
+async def calc_calories_survey_weight_handler(message: Message, state: FSMContext) -> None:
+    weight = float(message.text)
+    await state.update_data(weight=weight)
+    # data = await state.get_data()
+    await state.clear()
+
+
+@router.message(CalcCaloriesSurvey.weight, ~F.text.regexp(r"^\d+(\.\d+)?$"))
+async def calc_calories_survey_invalid_weight_handler(message: Message) -> None:
+    await message.answer("⚠️ Вага повинна бути числом. Введіть її ще раз:")
