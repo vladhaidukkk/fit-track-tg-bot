@@ -31,12 +31,22 @@ async def calc_calories_survey_gender_handler(callback_query: CallbackQuery, sta
 
     await callback_query.answer()
     await callback_query.message.edit_reply_markup(reply_markup=None)
-    await callback_query.message.answer(GENDER_TO_TEXT[gender], reply_markup=root_keyboard())
-
-    # TODO: continue survey.
-    await state.clear()
+    await callback_query.message.answer(GENDER_TO_TEXT[gender])
+    await callback_query.message.answer("📅 Вкажіть ваш вік:")
 
 
 @router.message(CalcCaloriesSurvey.gender)
 async def calc_calories_survey_unknown_gender_handler(message: Message) -> None:
     await message.answer("⚠️ Оберіть біологічну стать, натиснувши кнопку під повідомленням.")
+
+
+@router.message(CalcCaloriesSurvey.age, F.text.regexp(r"^\d+$"))
+async def calc_calories_survey_age_handler(message: Message, state: FSMContext) -> None:
+    age = int(message.text)
+    await state.update_data(age=age)
+    await state.set_state(CalcCaloriesSurvey.height)
+
+
+@router.message(CalcCaloriesSurvey.age, ~F.text.regexp(r"^\d+$"))
+async def calc_calories_survey_invalid_age_handler(message: Message) -> None:
+    await message.answer("⚠️ Вік повинен бути числом. Введіть його ще раз:", reply_markup=root_keyboard())
