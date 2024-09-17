@@ -1,7 +1,7 @@
 from bot.enums import Gender
 
 
-def calc_lbm(*, full_weight: float, fat_pct: float) -> float:
+def calc_lbm(*, full_weight: float, fat_pct: int) -> float:
     """Calculate lean body mass (LBM).
 
     Args:
@@ -16,7 +16,7 @@ def calc_lbm(*, full_weight: float, fat_pct: float) -> float:
     return full_weight - fat_weight
 
 
-def calc_bmr(*, gender: Gender, age: int, height: float, weight: float, fat_pct: float) -> float:
+def calc_bmr(*, gender: Gender, age: int, height: float, weight: float, fat_pct: int) -> float:
     """Calculate basal metabolic rate (BMR).
 
     Args:
@@ -37,7 +37,7 @@ def calc_bmr(*, gender: Gender, age: int, height: float, weight: float, fat_pct:
     return 447.593 + (9.247 * lbm) + (3.098 * height) - (4.33 * age)
 
 
-def calc_calorie(*, gender: Gender, age: int, height: float, weight: float, fat_pct: float, amr: float) -> float:
+def calc_calories(*, gender: Gender, age: int, height: float, weight: float, fat_pct: int, amr: float) -> float:
     """Calculate daily calorie needs.
 
     Args:
