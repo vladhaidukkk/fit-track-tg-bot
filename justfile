@@ -6,6 +6,9 @@ compose_file := "docker-compose-local.yaml"
 run:
     python -m bot.main
 
+debug:
+    PYTHONBREAKPOINT=ipdb.set_trace python -m bot.main
+
 up:
     docker compose -f {{compose_file}} up -d
 
