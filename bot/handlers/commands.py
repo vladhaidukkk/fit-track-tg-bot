@@ -4,13 +4,17 @@ from aiogram.types import Message
 from aiogram.utils import markdown
 
 from bot.config import settings
+from bot.db.models import UserModel
+from bot.db.queries import add_user
 from bot.keyboards.root import root_keyboard
 
 router = Router(name=__name__)
 
 
 @router.message(CommandStart())
-async def start_command_handler(message: Message) -> None:
+async def start_command_handler(message: Message, user: UserModel | None) -> None:
+    if not user:
+        await add_user(id_=message.from_user.id)
     await message.answer(
         markdown.text(
             f"Вас вітає {markdown.hbold(settings.bot.name)}! 👋",
