@@ -8,6 +8,7 @@ pydantic-settings = "^2.5.2"
 asyncpg = "^0.29.0"
 sqlalchemy = { extras = ["asyncio"], version = "^2.0.35" }
 alembic = "^1.13.2"
+inflect = "^7.4.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.4"
@@ -32,3 +33,6 @@ ignore = [
   "TD002",
   "TD003",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]

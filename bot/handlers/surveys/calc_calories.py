@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery, Message
 
 from bot.keyboards.gender import GENDER_TO_DATA, GENDER_TO_TEXT, gender_keyboard
 from bot.keyboards.root import RootKeyboardText
-from bot.utils import get_key_by_value
+from bot.utils.dict_utils import get_key_by_value
 
 router = Router(name=__name__)
 
