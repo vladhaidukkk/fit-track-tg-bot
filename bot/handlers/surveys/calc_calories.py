@@ -13,7 +13,6 @@ router = Router(name=__name__)
 class CalcCaloriesSurvey(StatesGroup):
     gender = State()
     age = State()
-    # TODO: change height type from int to float.
     height = State()
     weight = State()
 
@@ -54,15 +53,15 @@ async def calc_calories_survey_invalid_age_handler(message: Message) -> None:
     await message.answer("⚠️ Вік повинен бути числом. Введіть його ще раз:")
 
 
-@router.message(CalcCaloriesSurvey.height, F.text.regexp(r"^\d+$"))
+@router.message(CalcCaloriesSurvey.height, F.text.regexp(r"^\d+(\.\d+)?$"))
 async def calc_calories_survey_height_handler(message: Message, state: FSMContext) -> None:
-    height = int(message.text)
+    height = float(message.text)
     await state.update_data(height=height)
     await state.set_state(CalcCaloriesSurvey.weight)
     await message.answer("⚖️ Вкажіть вашу вагу (в кілограмах):")
 
 
-@router.message(CalcCaloriesSurvey.height, ~F.text.regexp(r"^\d+$"))
+@router.message(CalcCaloriesSurvey.height, ~F.text.regexp(r"^\d+(\.\d+)?$"))
 async def calc_calories_survey_invalid_height_handler(message: Message) -> None:
     await message.answer("⚠️ Зріст повинен бути числом. Введіть його ще раз:")
 
