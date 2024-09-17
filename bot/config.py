@@ -15,6 +15,7 @@ class DatabaseSettings(BaseModel):
     name: str
 
     @computed_field
+    @property
     def url(self) -> str:
         return PostgresDsn.build(
             scheme="postgresql+asyncpg",
@@ -26,9 +27,16 @@ class DatabaseSettings(BaseModel):
         ).unicode_string()
 
 
+class AlchemySettings(BaseModel):
+    echo: bool = False
+    echo_pool: bool = False
+    max_overflow: int = 10
+
+
 class Settings(BaseSettings):
     bot: BotSettings
     db: DatabaseSettings
+    alchemy: AlchemySettings = AlchemySettings()
 
     model_config = SettingsConfigDict(env_nested_delimiter="__", env_ignore_empty=True)
 
