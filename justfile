@@ -22,3 +22,13 @@ lint:
 
 fix:
     ruff check --fix
+
+# Migrations Management
+revise msg:
+    alembic revision --autogenerate -m "{{msg}}"
+
+migrate target="head":
+    alembic upgrade {{target}}
+
+revert target="-1":
+    alembic downgrade {{target}}
