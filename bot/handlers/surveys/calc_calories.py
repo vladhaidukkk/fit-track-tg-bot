@@ -13,6 +13,7 @@ router = Router(name=__name__)
 class CalcCaloriesSurvey(StatesGroup):
     gender = State()
     age = State()
+    # TODO: change height type from int to float.
     height = State()
     weight = State()
 
