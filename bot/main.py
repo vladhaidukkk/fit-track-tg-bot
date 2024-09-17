@@ -7,10 +7,12 @@ from aiogram.enums import ParseMode
 
 from bot.config import settings
 from bot.handlers import router
+from bot.middlewares.auth import AuthMiddleware
 
 
 async def main() -> None:
     dp = Dispatcher()
+    dp.update.outer_middleware(AuthMiddleware())
     dp.include_router(router)
 
     bot = Bot(token=settings.bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
