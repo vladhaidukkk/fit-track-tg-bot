@@ -4,7 +4,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils import markdown
 
-from bot.core.nutrition_calculator import calc_calories
+from bot.core.nutrition_calculator import calc_nutritional_profile
 from bot.keyboards.biological_gender import (
     BIOLOGICAL_GENDER_TO_DATA,
     BIOLOGICAL_GENDER_TO_TEXT,
@@ -109,7 +109,7 @@ async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) 
     data = await state.get_data()
     await state.clear()
 
-    daily_calories = calc_calories(
+    nutritional_profile = calc_nutritional_profile(
         gender=data["biological_gender"],
         age=data["age"],
         height=data["height"],
@@ -118,7 +118,7 @@ async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) 
         amr=data["amr"],
     )
     await message.answer(
-        markdown.text("🍽️ Ваша денна норма калорій становить:", markdown.hbold(f"{daily_calories:.2f}"))
+        markdown.text("🍽️ Ваша денна норма калорій становить:", markdown.hbold(f"{nutritional_profile["calories"]:.2f}"))
     )
 
 

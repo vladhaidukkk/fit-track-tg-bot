@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from bot.enums import BiologicalGender, WeightTarget
 
 
@@ -256,3 +258,78 @@ def calc_caffeine_max(*, weight: float) -> float:
 
     """
     return weight * 5
+
+
+class NutritionalProfile(TypedDict):
+    calories: float
+    proteins: float
+    fats: float
+    carbohydrates: float
+    water: float
+    fiber: float
+    salt: float
+    caffeine_norm: float
+    caffeine_max: float
+
+
+def calc_nutritional_profile(
+    *,
+    gender: BiologicalGender,
+    age: int,
+    height: float,
+    weight: float,
+    fat_pct: int,
+    amr: float,
+    target: WeightTarget = WeightTarget.MAINTAIN,
+) -> NutritionalProfile:
+    """Calculate a comprehensive nutritional profile.
+
+    Args:
+        gender: Gender of the person.
+        age: Age of the person in years.
+        height: Height of the person in centimeters.
+        weight: Weight of the person in kilograms.
+        fat_pct: Body fat percentage.
+        amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
+        target: Desired impact on weight from a process perspective.
+
+    Returns:
+        A dictionary containing the nutritional profile: calories, proteins, fats, carbohydrates, water, fiber, salt,
+        caffeine norm, and maximum caffeine.
+
+    """
+    return NutritionalProfile(
+        calories=calc_calories(
+            gender=gender,
+            age=age,
+            height=height,
+            weight=weight,
+            fat_pct=fat_pct,
+            amr=amr,
+            target=target,
+        ),
+        proteins=calc_proteins(weight=weight, fat_pct=fat_pct, target=target),
+        fats=calc_fats(weight=weight, fat_pct=fat_pct),
+        carbohydrates=calc_carbohydrates(
+            gender=gender,
+            age=age,
+            height=height,
+            weight=weight,
+            fat_pct=fat_pct,
+            amr=amr,
+            target=target,
+        ),
+        water=calc_water(weight=weight, fat_pct=fat_pct),
+        fiber=calc_fiber(
+            gender=gender,
+            age=age,
+            height=height,
+            weight=weight,
+            fat_pct=fat_pct,
+            amr=amr,
+            target=target,
+        ),
+        salt=calc_salt(weight=weight, fat_pct=fat_pct),
+        caffeine_norm=calc_caffeine_norm(weight=weight),
+        caffeine_max=calc_caffeine_max(weight=weight),
+    )
