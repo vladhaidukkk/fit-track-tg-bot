@@ -15,7 +15,7 @@ up:
 down:
     docker compose -f {{compose_file}} down
 
-# Code Styling
+# Code Styling Commands
 fmt:
     ruff format
     taplo format
@@ -26,7 +26,11 @@ lint:
 fix:
     ruff check --fix
 
-# Migrations Management
+# Testing Commands
+test:
+    python -m pytest
+
+# Migrations Management Commands
 revise msg:
     alembic revision --autogenerate -m "{{msg}}"
 

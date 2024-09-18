@@ -9,6 +9,7 @@ asyncpg = "^0.29.0"
 sqlalchemy = { extras = ["asyncio"], version = "^2.0.35" }
 alembic = "^1.13.2"
 inflect = "^7.4.0"
+pytest = "^8.3.3"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.4"
@@ -39,3 +40,6 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

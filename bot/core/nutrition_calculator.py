@@ -33,11 +33,11 @@ def calc_bmr(*, gender: BiologicalGender, age: int, height: float, weight: float
 
     """
     lbm = calc_lbm(full_weight=weight, fat_pct=fat_pct)
-    if gender == BiologicalGender.MALE:
-        return 88.362 + (13.397 * lbm) + (4.799 * height) - (5.677 * age)
-    # TODO: remove, after biological gender test creation.
-    assert gender == BiologicalGender.FEMALE, gender
-    return 447.593 + (9.247 * lbm) + (3.098 * height) - (4.33 * age)
+    return (
+        88.362 + (13.397 * lbm) + (4.799 * height) - (5.677 * age)
+        if gender == BiologicalGender.MALE
+        else 447.593 + (9.247 * lbm) + (3.098 * height) - (4.33 * age)
+    )
 
 
 def calc_tef(gender: BiologicalGender, age: int, height: float, weight: float, fat_pct: int, amr: float) -> float:
