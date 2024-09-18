@@ -1,6 +1,12 @@
 from enum import StrEnum, auto
 
 
-class Gender(StrEnum):
+class BiologicalGender(StrEnum):
     MALE = auto()
     FEMALE = auto()
+
+
+class WeightTarget(StrEnum):
+    LOSE = auto()
+    MAINTAIN = auto()
+    GAIN = auto()

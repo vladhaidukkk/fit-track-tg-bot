@@ -5,7 +5,11 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils import markdown
 
 from bot.core.nutrition_calculator import calc_calories
-from bot.keyboards.gender import GENDER_TO_DATA, GENDER_TO_TEXT, gender_keyboard
+from bot.keyboards.biological_gender import (
+    BIOLOGICAL_GENDER_TO_DATA,
+    BIOLOGICAL_GENDER_TO_TEXT,
+    biological_gender_keyboard,
+)
 from bot.keyboards.root import RootKeyboardText
 from bot.utils.dict_utils import get_key_by_value
 
@@ -13,7 +17,7 @@ router = Router(name=__name__)
 
 
 class CalcCaloriesSurvey(StatesGroup):
-    gender = State()
+    biological_gender = State()
     age = State()
     height = State()
     weight = State()
@@ -23,24 +27,26 @@ class CalcCaloriesSurvey(StatesGroup):
 
 @router.message(F.text == RootKeyboardText.CALC_CALORIES)
 async def calc_calories_button_handler(message: Message, state: FSMContext) -> None:
-    await state.set_state(CalcCaloriesSurvey.gender)
-    await message.answer("🚻 Оберіть вашу біологічну стать, натиснувши кнопку.", reply_markup=gender_keyboard())
+    await state.set_state(CalcCaloriesSurvey.biological_gender)
+    await message.answer(
+        "🚻 Оберіть вашу біологічну стать, натиснувши кнопку.", reply_markup=biological_gender_keyboard()
+    )
 
 
-@router.callback_query(CalcCaloriesSurvey.gender, F.data.in_(GENDER_TO_DATA.values()))
-async def calc_calories_survey_gender_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
-    gender = get_key_by_value(GENDER_TO_DATA, callback_query.data)
-    await state.update_data(gender=gender)
+@router.callback_query(CalcCaloriesSurvey.biological_gender, F.data.in_(BIOLOGICAL_GENDER_TO_DATA.values()))
+async def calc_calories_survey_biological_gender_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+    biological_gender = get_key_by_value(BIOLOGICAL_GENDER_TO_DATA, callback_query.data)
+    await state.update_data(biological_gender=biological_gender)
     await state.set_state(CalcCaloriesSurvey.age)
 
     await callback_query.answer()
     await callback_query.message.edit_reply_markup(reply_markup=None)
-    await callback_query.message.answer(GENDER_TO_TEXT[gender])
+    await callback_query.message.answer(BIOLOGICAL_GENDER_TO_TEXT[biological_gender])
     await callback_query.message.answer("📅 Вкажіть ваш вік:")
 
 
-@router.message(CalcCaloriesSurvey.gender)
-async def calc_calories_survey_unknown_gender_handler(message: Message) -> None:
+@router.message(CalcCaloriesSurvey.biological_gender)
+async def calc_calories_survey_unknown_biological_gender_handler(message: Message) -> None:
     await message.answer("⚠️ Оберіть біологічну стать, натиснувши кнопку під повідомленням.")
 
 
@@ -104,7 +110,7 @@ async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) 
     await state.clear()
 
     daily_calories = calc_calories(
-        gender=data["gender"],
+        gender=data["biological_gender"],
         age=data["age"],
         height=data["height"],
         weight=data["weight"],

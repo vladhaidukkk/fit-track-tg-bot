@@ -1,4 +1,4 @@
-from bot.enums import Gender
+from bot.enums import BiologicalGender, WeightTarget
 
 
 def calc_lbm(*, full_weight: float, fat_pct: int) -> float:
@@ -16,7 +16,7 @@ def calc_lbm(*, full_weight: float, fat_pct: int) -> float:
     return full_weight - fat_weight
 
 
-def calc_bmr(*, gender: Gender, age: int, height: float, weight: float, fat_pct: int) -> float:
+def calc_bmr(*, gender: BiologicalGender, age: int, height: float, weight: float, fat_pct: int) -> float:
     """Calculate basal metabolic rate (BMR).
 
     Args:
@@ -31,14 +31,15 @@ def calc_bmr(*, gender: Gender, age: int, height: float, weight: float, fat_pct:
 
     """
     lbm = calc_lbm(full_weight=weight, fat_pct=fat_pct)
-    if gender == Gender.MALE:
+    if gender == BiologicalGender.MALE:
         return 88.362 + (13.397 * lbm) + (4.799 * height) - (5.677 * age)
-    assert gender == Gender.FEMALE, gender
+    # TODO: remove, after biological gender test creation.
+    assert gender == BiologicalGender.FEMALE, gender
     return 447.593 + (9.247 * lbm) + (3.098 * height) - (4.33 * age)
 
 
-def calc_calories(*, gender: Gender, age: int, height: float, weight: float, fat_pct: int, amr: float) -> float:
-    """Calculate daily calorie needs.
+def calc_tef(gender: BiologicalGender, age: int, height: float, weight: float, fat_pct: int, amr: float) -> float:
+    """Calculate the thermic effect of food (TEF).
 
     Args:
         gender: Gender of the person.
@@ -49,26 +50,66 @@ def calc_calories(*, gender: Gender, age: int, height: float, weight: float, fat
         amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
 
     Returns:
+        The TEF in calories/day.
+
+    """
+    bmr = calc_bmr(gender=gender, age=age, height=height, weight=weight, fat_pct=fat_pct)
+    return bmr * amr / 10
+
+
+def calc_calories(
+    *,
+    gender: BiologicalGender,
+    age: int,
+    height: float,
+    weight: float,
+    fat_pct: int,
+    amr: float,
+    target: WeightTarget = WeightTarget.MAINTAIN,
+) -> float:
+    """Calculate daily calorie needs.
+
+    Args:
+        gender: Gender of the person.
+        age: Age of the person in years.
+        height: Height of the person in centimeters.
+        weight: Weight of the person in kilograms.
+        fat_pct: Body fat percentage.
+        amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
+        target: Desired impact on weight from a process perspective.
+
+    Returns:
         The daily calorie needs in calories/day.
 
     """
     bmr = calc_bmr(gender=gender, age=age, height=height, weight=weight, fat_pct=fat_pct)
-    return bmr * amr * 1.1
+    tef = calc_tef(gender=gender, age=age, height=height, weight=weight, fat_pct=fat_pct, amr=amr)
+
+    target_to_coefficient = {
+        WeightTarget.LOSE: 0.9,
+        WeightTarget.MAINTAIN: 1,
+        WeightTarget.GAIN: 1.1,
+    }
+    coefficient = target_to_coefficient[target]
+
+    return (bmr * amr + tef) * coefficient
 
 
-def calc_proteins(*, weight: float, fat_pct: int) -> float:
+def calc_proteins(*, weight: float, fat_pct: int, target: WeightTarget = WeightTarget.MAINTAIN) -> float:
     """Calculate daily protein needs.
 
     Args:
         weight: Weight of the person in kilograms.
         fat_pct: Body fat percentage.
+        target: Desired impact on weight from a process perspective.
 
     Returns:
         The daily protein needs in grams/day.
 
     """
     lbm = calc_lbm(full_weight=weight, fat_pct=fat_pct)
-    return lbm * 1.6
+    coefficient = 2.5 if target == WeightTarget.LOSE else 1.6
+    return lbm * coefficient
 
 
 def calc_fats(*, weight: float, fat_pct: int) -> float:
@@ -85,7 +126,16 @@ def calc_fats(*, weight: float, fat_pct: int) -> float:
     return calc_lbm(full_weight=weight, fat_pct=fat_pct)
 
 
-def calc_carbohydrates(*, gender: Gender, age: int, height: float, weight: float, fat_pct: int, amr: float) -> float:
+def calc_carbohydrates(
+    *,
+    gender: BiologicalGender,
+    age: int,
+    height: float,
+    weight: float,
+    fat_pct: int,
+    amr: float,
+    target: WeightTarget = WeightTarget.MAINTAIN,
+) -> float:
     """Calculate daily carbohydrate needs.
 
     Args:
@@ -95,13 +145,22 @@ def calc_carbohydrates(*, gender: Gender, age: int, height: float, weight: float
         weight: Weight of the person in kilograms.
         fat_pct: Body fat percentage.
         amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
+        target: Desired impact on weight from a process perspective.
 
     Returns:
         The daily carbohydrate needs in grams/day.
 
     """
-    calories = calc_calories(gender=gender, age=age, height=height, weight=weight, fat_pct=fat_pct, amr=amr)
-    proteins = calc_proteins(weight=weight, fat_pct=fat_pct)
+    calories = calc_calories(
+        gender=gender,
+        age=age,
+        height=height,
+        weight=weight,
+        fat_pct=fat_pct,
+        amr=amr,
+        target=target,
+    )
+    proteins = calc_proteins(weight=weight, fat_pct=fat_pct, target=target)
     fats = calc_fats(weight=weight, fat_pct=fat_pct)
     return (calories - (proteins * 4) + (fats * 9)) / 4
 
@@ -121,7 +180,16 @@ def calc_water(*, weight: float, fat_pct: int) -> float:
     return lbm / 20
 
 
-def calc_fiber(*, gender: Gender, age: int, height: float, weight: float, fat_pct: int, amr: float) -> float:
+def calc_fiber(
+    *,
+    gender: BiologicalGender,
+    age: int,
+    height: float,
+    weight: float,
+    fat_pct: int,
+    amr: float,
+    target: WeightTarget = WeightTarget.MAINTAIN,
+) -> float:
     """Calculate daily fiber needs.
 
     Args:
@@ -131,12 +199,21 @@ def calc_fiber(*, gender: Gender, age: int, height: float, weight: float, fat_pc
         weight: Weight of the person in kilograms.
         fat_pct: Body fat percentage.
         amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
+        target: Desired impact on weight from a process perspective.
 
     Returns:
         The daily fiber needs in grams/day.
 
     """
-    calories = calc_calories(gender=gender, age=age, height=height, weight=weight, fat_pct=fat_pct, amr=amr)
+    calories = calc_calories(
+        gender=gender,
+        age=age,
+        height=height,
+        weight=weight,
+        fat_pct=fat_pct,
+        amr=amr,
+        target=target,
+    )
     return calories / 1000 * 10
 
 
