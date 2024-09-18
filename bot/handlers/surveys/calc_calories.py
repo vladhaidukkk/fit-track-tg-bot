@@ -40,8 +40,8 @@ async def calc_calories_survey_biological_gender_handler(callback_query: Callbac
     await state.set_state(CalcCaloriesSurvey.age)
 
     await callback_query.answer()
-    await callback_query.message.edit_reply_markup(reply_markup=None)
-    await callback_query.message.answer(BIOLOGICAL_GENDER_TO_TEXT[biological_gender])
+    icon, output = BIOLOGICAL_GENDER_TO_TEXT[biological_gender].split()
+    await callback_query.message.edit_text(f"{icon} Ваша біологічна стать: {markdown.hbold(output)}")
     await callback_query.message.answer("📅 Вкажіть ваш вік:")
 
 
@@ -118,7 +118,10 @@ async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) 
         amr=data["amr"],
     )
     await message.answer(
-        markdown.text("🍽️ Ваша денна норма калорій становить:", markdown.hbold(f"{nutritional_profile["calories"]:.2f}"))
+        markdown.text(
+            "🍽️ Ваша денна норма калорій становить:",
+            markdown.hbold(f"{nutritional_profile["calories"]:.2f}"),
+        )
     )
 
 
