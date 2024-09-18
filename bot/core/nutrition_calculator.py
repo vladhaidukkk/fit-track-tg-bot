@@ -54,3 +54,53 @@ def calc_calories(*, gender: Gender, age: int, height: float, weight: float, fat
     """
     bmr = calc_bmr(gender=gender, age=age, height=height, weight=weight, fat_pct=fat_pct)
     return bmr * amr * 1.1
+
+
+def calc_proteins(*, weight: float, fat_pct: int) -> float:
+    """Calculate daily protein needs.
+
+    Args:
+        weight: Weight of the person in kilograms.
+        fat_pct: Body fat percentage.
+
+    Returns:
+        The daily protein needs in grams/day.
+
+    """
+    lbm = calc_lbm(full_weight=weight, fat_pct=fat_pct)
+    return lbm * 1.6
+
+
+def calc_fats(*, weight: float, fat_pct: int) -> float:
+    """Calculate daily fat needs.
+
+    Args:
+        weight: Weight of the person in kilograms.
+        fat_pct: Body fat percentage.
+
+    Returns:
+        The daily fat needs in grams/day.
+
+    """
+    return calc_lbm(full_weight=weight, fat_pct=fat_pct)
+
+
+def calc_carbohydrates(*, gender: Gender, age: int, height: float, weight: float, fat_pct: int, amr: float) -> float:
+    """Calculate daily carbohydrate needs.
+
+    Args:
+        gender: Gender of the person.
+        age: Age of the person in years.
+        height: Height of the person in centimeters.
+        weight: Weight of the person in kilograms.
+        fat_pct: Body fat percentage.
+        amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
+
+    Returns:
+        The daily carbohydrate needs in grams/day.
+
+    """
+    calories = calc_calories(gender=gender, age=age, height=height, weight=weight, fat_pct=fat_pct, amr=amr)
+    proteins = calc_proteins(weight=weight, fat_pct=fat_pct)
+    fats = calc_fats(weight=weight, fat_pct=fat_pct)
+    return (calories - (proteins * 4) + (fats * 9)) / 4
