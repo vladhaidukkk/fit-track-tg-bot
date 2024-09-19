@@ -164,7 +164,7 @@ def calc_carbohydrates(
     )
     proteins = calc_proteins(weight=weight, fat_pct=fat_pct, target=target)
     fats = calc_fats(weight=weight, fat_pct=fat_pct)
-    return (calories - (proteins * 4) + (fats * 9)) / 4
+    return (calories - (proteins * 4) - (fats * 9)) / 4
 
 
 def calc_water(*, weight: float, fat_pct: int) -> float:
