@@ -108,11 +108,37 @@ async def calc_calories_survey_invalid_fat_pct_handler(message: Message) -> None
 async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) -> None:
     amr = float(message.text)
     await state.update_data(amr=amr)
+    data = await state.get_data()
     await state.set_state(CalcCaloriesSurvey.weight_target)
 
-    # TODO: info so far so good :D
-    # await message.answer(md.text("title\n", md.text("params"), sep="\n"))
-    await message.answer("🎯 Оберіть вашу мету, натиснувши кнопку.", reply_markup=weight_target_keyboard())
+    _biological_gender_icon, biological_gender_output = BIOLOGICAL_GENDER_TO_TEXT[data["biological_gender"]].split(
+        maxsplit=1
+    )
+    age = data["age"]
+    if age % 10 == 1 and age % 100 != 11:
+        age_word = "рік"
+    elif 2 <= age % 10 <= 4 and not (12 <= age % 100 <= 14):
+        age_word = "роки"
+    else:
+        age_word = "років"
+    await message.answer(
+        md.text(
+            f"Біологічна стать: {md.hbold(biological_gender_output)}",
+            f"Вік: {md.hbold(f"{data["age"]} {age_word}")}",
+            f"Ріст: {md.hbold(f"{data["height"]} см")}",
+            f"Вага: {md.hbold(f"{data["weight"]} кг")}",
+            f"Відсоток жиру: {md.hbold(f"{data["fat_pct"]}%")}",
+            f"Коефіцієнт активності: {md.hbold(data["amr"])}",
+            sep="\n",
+        )
+    )
+    await message.answer(
+        (
+            "🎯 Переконайтесь, що всі дані правильні, та оберіть вашу мету, натиснувши відповідну кнопку. "
+            "Тоді ви отримаєте детальний опис поживних показників відповідно до обраної мети."
+        ),
+        reply_markup=weight_target_keyboard(),
+    )
 
 
 @router.message(CalcCaloriesSurvey.amr, ~F.text.regexp(r"^\d+(\.\d+)?$"))
