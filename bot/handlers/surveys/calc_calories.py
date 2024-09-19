@@ -13,6 +13,7 @@ from bot.keyboards.biological_gender import (
 from bot.keyboards.root import RootKeyboardText
 from bot.keyboards.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
 from bot.utils.dict_utils import get_key_by_value
+from bot.utils.format_utils import format_age
 
 router = Router(name=__name__)
 
@@ -114,17 +115,10 @@ async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) 
     _biological_gender_icon, biological_gender_output = BIOLOGICAL_GENDER_TO_TEXT[data["biological_gender"]].split(
         maxsplit=1
     )
-    age = data["age"]
-    if age % 10 == 1 and age % 100 != 11:
-        age_word = "рік"
-    elif 2 <= age % 10 <= 4 and not (12 <= age % 100 <= 14):
-        age_word = "роки"
-    else:
-        age_word = "років"
     await message.answer(
         md.text(
             f"Біологічна стать: {md.hbold(biological_gender_output)}",
-            f"Вік: {md.hbold(f"{data["age"]} {age_word}")}",
+            f"Вік: {md.hbold(f"{data["age"]} {format_age(data["age"])}")}",
             f"Ріст: {md.hbold(f"{data["height"]} см")}",
             f"Вага: {md.hbold(f"{data["weight"]} кг")}",
             f"Відсоток жиру: {md.hbold(f"{data["fat_pct"]}%")}",
