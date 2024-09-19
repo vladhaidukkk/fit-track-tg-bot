@@ -13,7 +13,7 @@ from bot.keyboards.biological_gender import (
 from bot.keyboards.root import RootKeyboardText
 from bot.keyboards.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
 from bot.utils.dict_utils import get_key_by_value
-from bot.utils.format_utils import format_age
+from bot.utils.format_utils import format_age, format_number
 
 router = Router(name=__name__)
 
@@ -118,19 +118,16 @@ async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) 
     await message.answer(
         md.text(
             f"Біологічна стать: {md.hbold(biological_gender_output)}",
-            f"Вік: {md.hbold(f"{data["age"]} {format_age(data["age"])}")}",
-            f"Ріст: {md.hbold(f"{data["height"]} см")}",
-            f"Вага: {md.hbold(f"{data["weight"]} кг")}",
-            f"Відсоток жиру: {md.hbold(f"{data["fat_pct"]}%")}",
-            f"Коефіцієнт активності: {md.hbold(data["amr"])}",
+            f"Вік: {md.hbold(format_age(data["age"]))}",
+            f"Ріст: {md.hbold(format_number(data["height"], "см"))}",
+            f"Вага: {md.hbold(format_number(data["weight"], "кг"))}",
+            f"Відсоток жиру: {md.hbold(format_number(data["fat_pct"], "%", sep=""))}",
+            f"Коефіцієнт активності: {md.hbold(format_number(data["amr"]))}",
             sep="\n",
         )
     )
     await message.answer(
-        (
-            "🎯 Переконайтесь, що всі дані правильні, та оберіть вашу мету, натиснувши відповідну кнопку. "
-            "Тоді ви отримаєте детальний опис поживних показників відповідно до обраної мети."
-        ),
+        "🎯 Переконайтесь, що всі дані правильні, та оберіть вашу мету, натиснувши відповідну кнопку.",
         reply_markup=weight_target_keyboard(),
     )
 
@@ -161,8 +158,29 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
         target=data["weight_target"],
     )
     await callback_query.message.answer(
-        md.text("🍽️ Ваша денна норма калорій становить:", md.hbold(f"{nutritional_profile["calories"]:.2f}"))
+        md.text(
+            md.hbold("📊 Рекомендовані поживні показники:\n"),
+            f"Калорії: {md.hbold(format_number(nutritional_profile["calories"], "ккал"))}",
+            f"Білки: {md.hbold(format_number(nutritional_profile["proteins"], "г"))}",
+            f"Жири: {md.hbold(format_number(nutritional_profile["fats"], "г"))}",
+            f"Вуглеводи: {md.hbold(format_number(nutritional_profile["carbohydrates"], "г"))}",
+            f"Вода: {md.hbold(format_number(nutritional_profile["water"], "л"))}",
+            f"Клітковина: {md.hbold(format_number(nutritional_profile["fiber"], "г"))}",
+            f"Сіль: {md.hbold(format_number(nutritional_profile["salt"], "г"))}",
+            f"Норма кофеїну: {md.hbold(format_number(nutritional_profile["caffeine_norm"], "мг"))}",
+            f"Макс. доза кофеїну: {md.hbold(format_number(nutritional_profile["caffeine_max"], "мг"))}\n",
+            md.html_decoration.italic(
+                md.hbold("⚠️ Зверніть увагу: ")
+                + (
+                    "ці дані не є достовірно точними, оскільки вони залежать від індивідуальних особливостей вашого "
+                    "організму. "
+                    "Використовуйте їх як відправну точку та коригуйте на основі ваших результатів."
+                )
+            ),
+            sep="\n",
+        )
     )
+    # TODO: add a button to round values & a button to show detailed info (lbm, bmr, tef...).
 
 
 @router.message(CalcCaloriesSurvey.weight_target)
