@@ -11,6 +11,7 @@ from bot.keyboards.biological_gender import (
     biological_gender_keyboard,
 )
 from bot.keyboards.root import RootKeyboardText
+from bot.keyboards.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
 from bot.utils.dict_utils import get_key_by_value
 
 router = Router(name=__name__)
@@ -23,6 +24,7 @@ class CalcCaloriesSurvey(StatesGroup):
     weight = State()
     fat_pct = State()
     amr = State()
+    weight_target = State()
 
 
 @router.message(F.text == RootKeyboardText.CALC_CALORIES)
@@ -40,7 +42,7 @@ async def calc_calories_survey_biological_gender_handler(callback_query: Callbac
     await state.set_state(CalcCaloriesSurvey.age)
 
     await callback_query.answer()
-    icon, output = BIOLOGICAL_GENDER_TO_TEXT[biological_gender].split()
+    icon, output = BIOLOGICAL_GENDER_TO_TEXT[biological_gender].split(maxsplit=1)
     await callback_query.message.edit_text(f"{icon} Ваша біологічна стать: {md.hbold(output)}")
     await callback_query.message.answer("📅 Вкажіть ваш вік:")
 
@@ -106,8 +108,28 @@ async def calc_calories_survey_invalid_fat_pct_handler(message: Message) -> None
 async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) -> None:
     amr = float(message.text)
     await state.update_data(amr=amr)
+    await state.set_state(CalcCaloriesSurvey.weight_target)
+
+    # TODO: info so far so good :D
+    # await message.answer(md.text("title\n", md.text("params"), sep="\n"))
+    await message.answer("🎯 Оберіть вашу мету, натиснувши кнопку.", reply_markup=weight_target_keyboard())
+
+
+@router.message(CalcCaloriesSurvey.amr, ~F.text.regexp(r"^\d+(\.\d+)?$"))
+async def calc_calories_survey_invalid_amr_handler(message: Message) -> None:
+    await message.answer("⚠️ Коефіцієнт активності повинен бути числом. Введіть його ще раз:")
+
+
+@router.callback_query(CalcCaloriesSurvey.weight_target, F.data.in_(WEIGHT_TARGET_TO_DATA.values()))
+async def calc_calories_survey_weight_target_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+    weight_target = get_key_by_value(WEIGHT_TARGET_TO_DATA, callback_query.data)
+    await state.update_data(weight_target=weight_target)
     data = await state.get_data()
     await state.clear()
+
+    await callback_query.answer()
+    _icon, output = WEIGHT_TARGET_TO_TEXT[weight_target].split(maxsplit=1)
+    await callback_query.message.edit_text(f"🎯 Ваша мета: {md.hbold(output)}")
 
     nutritional_profile = calc_nutritional_profile(
         gender=data["biological_gender"],
@@ -116,12 +138,13 @@ async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) 
         weight=data["weight"],
         fat_pct=data["fat_pct"],
         amr=data["amr"],
+        target=data["weight_target"],
     )
-    await message.answer(
+    await callback_query.message.answer(
         md.text("🍽️ Ваша денна норма калорій становить:", md.hbold(f"{nutritional_profile["calories"]:.2f}"))
     )
 
 
-@router.message(CalcCaloriesSurvey.amr, ~F.text.regexp(r"^\d+(\.\d+)?$"))
-async def calc_calories_survey_invalid_amr_handler(message: Message) -> None:
-    await message.answer("⚠️ Коефіцієнт активності повинен бути числом. Введіть його ще раз:")
+@router.message(CalcCaloriesSurvey.weight_target)
+async def calc_calories_survey_unknown_weight_target_handler(message: Message) -> None:
+    await message.answer("⚠️ Оберіть вашу мету, натиснувши кнопку під повідомленням.")
