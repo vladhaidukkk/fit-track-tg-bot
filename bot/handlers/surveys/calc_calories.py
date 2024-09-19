@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
-from aiogram.utils import markdown
+from aiogram.utils import markdown as md
 
 from bot.core.nutrition_calculator import calc_nutritional_profile
 from bot.keyboards.biological_gender import (
@@ -41,7 +41,7 @@ async def calc_calories_survey_biological_gender_handler(callback_query: Callbac
 
     await callback_query.answer()
     icon, output = BIOLOGICAL_GENDER_TO_TEXT[biological_gender].split()
-    await callback_query.message.edit_text(f"{icon} Ваша біологічна стать: {markdown.hbold(output)}")
+    await callback_query.message.edit_text(f"{icon} Ваша біологічна стать: {md.hbold(output)}")
     await callback_query.message.answer("📅 Вкажіть ваш вік:")
 
 
@@ -118,10 +118,7 @@ async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) 
         amr=data["amr"],
     )
     await message.answer(
-        markdown.text(
-            "🍽️ Ваша денна норма калорій становить:",
-            markdown.hbold(f"{nutritional_profile["calories"]:.2f}"),
-        )
+        md.text("🍽️ Ваша денна норма калорій становить:", md.hbold(f"{nutritional_profile["calories"]:.2f}"))
     )
 
 

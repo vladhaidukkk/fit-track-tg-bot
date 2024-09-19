@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from aiogram.utils import markdown
+from aiogram.utils import markdown as md
 
 from bot.config import settings
 from bot.db.models import UserModel
@@ -16,8 +16,8 @@ async def start_command_handler(message: Message, user: UserModel | None) -> Non
     if not user:
         await add_user(id_=message.from_user.id)
     await message.answer(
-        markdown.text(
-            f"Вас вітає {markdown.hbold(settings.bot.name)}! 👋",
+        md.text(
+            f"Вас вітає {md.hbold(settings.bot.name)}! 👋",
             "Давайте розпочнемо вашу фітнес-подорож разом.",
             sep="\n",
         ),
