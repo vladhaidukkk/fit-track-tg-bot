@@ -1,1 +1,1 @@
-from .user import UserAlreadyExistsError
+from .user import UserAlreadyExistsError, UserNotFoundError
