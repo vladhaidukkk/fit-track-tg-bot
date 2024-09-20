@@ -8,6 +8,7 @@ class BotSettings(BaseModel):
 
 
 class DatabaseSettings(BaseModel):
+    enabled: bool = True
     username: str
     password: str | None = None
     host: str
