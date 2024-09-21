@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field, PostgresDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from bot.logger import LogLevelName
+
 
 class BotSettings(BaseModel):
     name: str = "FitTrack Bot"
@@ -35,6 +37,8 @@ class AlchemySettings(BaseModel):
 
 
 class Settings(BaseSettings):
+    log_level_name: LogLevelName = "INFO"
+
     bot: BotSettings
     db: DatabaseSettings
     alchemy: AlchemySettings = AlchemySettings()

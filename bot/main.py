@@ -1,5 +1,4 @@
 import asyncio
-import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -7,6 +6,7 @@ from aiogram.enums import ParseMode
 
 from bot.config import settings
 from bot.handlers import router
+from bot.logger import configure_logging
 from bot.middlewares.auth import AuthMiddleware
 
 
@@ -21,5 +21,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    configure_logging(level_name=settings.log_level_name)
     asyncio.run(main())
