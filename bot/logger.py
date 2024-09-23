@@ -27,7 +27,7 @@ def get_logging_config(root_level_name: LogLevelName = "INFO") -> dict[str, any]
                 "level": root_level_name,
                 "handlers": ["stdout"],
             }
-        }
+        },
     }
 
 
