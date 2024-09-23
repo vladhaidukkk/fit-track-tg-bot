@@ -14,6 +14,8 @@ from bot.keyboards.root import RootKeyboardText
 from bot.keyboards.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
 from bot.utils.dict_utils import get_key_by_value
 from bot.utils.format_utils import format_age, format_number
+from bot.utils.message_utils import build_detailed_message
+from bot.utils.string_utils import get_tail
 
 router = Router(name=__name__)
 
@@ -37,8 +39,9 @@ async def add_messages_to_delete(*, state: FSMContext, message_ids: list[int]) -
 async def clear_messages(*, bot: Bot, chat_id: int | str, state: FSMContext) -> None:
     data = await state.get_data()
     messages_to_delete = data.get("messages_to_delete", [])
-    await bot.delete_messages(chat_id=chat_id, message_ids=messages_to_delete)
-    await state.update_data(messages_to_delete=[])
+    if messages_to_delete:
+        await bot.delete_messages(chat_id=chat_id, message_ids=messages_to_delete)
+        await state.update_data(messages_to_delete=[])
 
 
 @router.message(F.text == RootKeyboardText.CALC_CALORIES)
@@ -135,49 +138,65 @@ async def calc_calories_survey_invalid_fat_pct_handler(message: Message, state: 
 
 @router.message(CalcCaloriesSurvey.amr, F.text.regexp(r"^\d+(\.\d+)?$"))
 async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) -> None:
+    await add_messages_to_delete(state=state, message_ids=[message.message_id])
+    await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state)
+
     amr = float(message.text)
     await state.update_data(amr=amr)
     data = await state.get_data()
     await state.set_state(CalcCaloriesSurvey.weight_target)
 
-    await add_messages_to_delete(state=state, message_ids=[message.message_id])
-    await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state)
-
-    _biological_gender_icon, biological_gender_output = BIOLOGICAL_GENDER_TO_TEXT[data["biological_gender"]].split(
-        maxsplit=1
-    )
     await message.answer(
-        md.text(
-            f"Біологічна стать: {md.hbold(biological_gender_output)}",
-            f"Вік: {md.hbold(format_age(data["age"]))}",
-            f"Ріст: {md.hbold(format_number(data["height"], "см"))}",
-            f"Вага: {md.hbold(format_number(data["weight"], "кг"))}",
-            f"Відсоток жиру: {md.hbold(format_number(data["fat_pct"], "%", sep=""))}",
-            f"Коефіцієнт активності: {md.hbold(format_number(data["amr"]))}",
-            sep="\n",
-        )
-    )
-    await message.answer(
-        "🎯 Переконайтесь, що всі дані правильні, та оберіть вашу мету, натиснувши відповідну кнопку.",
+        build_detailed_message(
+            title="📋 Вхідні дані",
+            details=[
+                ("Біологічна стать", get_tail(BIOLOGICAL_GENDER_TO_TEXT[data["biological_gender"]])),
+                ("Вік", format_age(data["age"])),
+                ("Ріст", format_number(data["height"], "см")),
+                ("Вага", format_number(data["weight"], "кг")),
+                ("Відсоток жиру", format_number(data["fat_pct"], "%", sep="")),
+                ("Коефіцієнт активності", format_number(data["amr"])),
+            ],
+            footer="🎯 Переконайтесь, що всі дані правильні, та оберіть вашу мету, натиснувши відповідну кнопку.",
+        ),
         reply_markup=weight_target_keyboard(),
     )
 
 
 @router.message(CalcCaloriesSurvey.amr, ~F.text.regexp(r"^\d+(\.\d+)?$"))
-async def calc_calories_survey_invalid_amr_handler(message: Message) -> None:
-    await message.answer("⚠️ Коефіцієнт активності повинен бути числом. Введіть його ще раз:")
+async def calc_calories_survey_invalid_amr_handler(message: Message, state: FSMContext) -> None:
+    sent_message = await message.answer("⚠️ Коефіцієнт активності повинен бути числом. Введіть його ще раз:")
+    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
 @router.callback_query(CalcCaloriesSurvey.weight_target, F.data.in_(WEIGHT_TARGET_TO_DATA.values()))
 async def calc_calories_survey_weight_target_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+    await clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, state=state)
+
     weight_target = get_key_by_value(WEIGHT_TARGET_TO_DATA, callback_query.data)
     await state.update_data(weight_target=weight_target)
     data = await state.get_data()
     await state.clear()
 
     await callback_query.answer()
-    _icon, output = WEIGHT_TARGET_TO_TEXT[weight_target].split(maxsplit=1)
-    await callback_query.message.edit_text(f"🎯 Ваша мета: {md.hbold(output)}")
+    await callback_query.message.edit_text(
+        build_detailed_message(
+            title="📋 Вхідні дані",
+            details=[
+                ("Біологічна стать", get_tail(BIOLOGICAL_GENDER_TO_TEXT[data["biological_gender"]])),
+                ("Вік", format_age(data["age"])),
+                ("Ріст", format_number(data["height"], "см")),
+                ("Вага", format_number(data["weight"], "кг")),
+                ("Відсоток жиру", format_number(data["fat_pct"], "%", sep="")),
+                ("Коефіцієнт активності", format_number(data["amr"])),
+            ],
+            footer=(
+                "🎯 Нижче ви бачите рекомендовані поживні показники щоб " +
+                md.hbold(get_tail(WEIGHT_TARGET_TO_TEXT[data["weight_target"]]).upper()) +
+                ", розраховані на основі вхідних даних."
+            ),
+        )
+    )
 
     nutritional_profile = calc_nutritional_profile(
         gender=data["biological_gender"],
@@ -189,31 +208,30 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
         target=data["weight_target"],
     )
     await callback_query.message.answer(
-        md.text(
-            md.hbold("📊 Рекомендовані поживні показники:\n"),
-            f"Калорії: {md.hbold(format_number(nutritional_profile["calories"], "ккал"))}",
-            f"Білки: {md.hbold(format_number(nutritional_profile["proteins"], "г"))}",
-            f"Жири: {md.hbold(format_number(nutritional_profile["fats"], "г"))}",
-            f"Вуглеводи: {md.hbold(format_number(nutritional_profile["carbohydrates"], "г"))}",
-            f"Вода: {md.hbold(format_number(nutritional_profile["water"], "л"))}",
-            f"Клітковина: {md.hbold(format_number(nutritional_profile["fiber"], "г"))}",
-            f"Сіль: {md.hbold(format_number(nutritional_profile["salt"], "г"))}",
-            f"Норма кофеїну: {md.hbold(format_number(nutritional_profile["caffeine_norm"], "мг"))}",
-            f"Макс. доза кофеїну: {md.hbold(format_number(nutritional_profile["caffeine_max"], "мг"))}\n",
-            md.html_decoration.italic(
-                md.hbold("⚠️ Зверніть увагу: ")
-                + (
-                    "ці дані не є достовірно точними, оскільки вони залежать від індивідуальних особливостей вашого "
-                    "організму. "
-                    "Використовуйте їх як відправну точку та коригуйте на основі ваших результатів."
-                )
-            ),
-            sep="\n",
+        build_detailed_message(
+            title="📊 Рекомендовані поживні показники",
+            details=[
+                ("Калорії", format_number(nutritional_profile["calories"], "ккал")),
+                ("Білки", format_number(nutritional_profile["proteins"], "г")),
+                ("Жири", format_number(nutritional_profile["fats"], "г")),
+                ("Вуглеводи", format_number(nutritional_profile["carbohydrates"], "г")),
+                ("Вода", format_number(nutritional_profile["water"], "л")),
+                ("Клітковина", format_number(nutritional_profile["fiber"], "г")),
+                ("Сіль", format_number(nutritional_profile["salt"], "г")),
+                ("Норма кофеїну", format_number(nutritional_profile["caffeine_norm"], "мг")),
+                ("Макс. доза кофеїну", format_number(nutritional_profile["caffeine_max"], "мг")),
+            ],
+            footer=(
+                md.hbold("⚠️ Зверніть увагу: ") +
+                "ці дані не є достовірно точними, оскільки вони залежать від індивідуальних особливостей вашого " +
+                "організму. Використовуйте їх як відправну точку та коригуйте на основі ваших результатів."
+            )
         )
     )
     # TODO: add a button to round values & a button to show detailed info (lbm, bmr, tef...).
 
 
 @router.message(CalcCaloriesSurvey.weight_target)
-async def calc_calories_survey_unknown_weight_target_handler(message: Message) -> None:
-    await message.answer("⚠️ Оберіть вашу мету, натиснувши кнопку під повідомленням.")
+async def calc_calories_survey_unknown_weight_target_handler(message: Message, state: FSMContext) -> None:
+    sent_message = await message.answer("⚠️ Оберіть вашу мету, натиснувши кнопку під повідомленням.")
+    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
