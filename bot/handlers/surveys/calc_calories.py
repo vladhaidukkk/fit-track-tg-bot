@@ -4,8 +4,9 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils import markdown as md
 
+from bot.core.enums import ActivityRate
 from bot.core.nutrition_calculator import calc_nutritional_profile
-from bot.keyboards.activity_rate import ACTIVITY_RATE_TO_DATA, activity_rate_keyboard
+from bot.keyboards.activity_rate import ACTIVITY_RATE_HELP_DATA, ACTIVITY_RATE_TO_DATA, activity_rate_keyboard
 from bot.keyboards.biological_gender import (
     BIOLOGICAL_GENDER_TO_DATA,
     BIOLOGICAL_GENDER_TO_TEXT,
@@ -127,7 +128,9 @@ async def calc_calories_survey_fat_pct_handler(message: Message, state: FSMConte
     await state.update_data(fat_pct=fat_pct)
     await state.set_state(CalcCaloriesSurvey.amr)
 
-    sent_message = await message.answer("🏃 Вкажіть ваш коефіцієнт активності:", reply_markup=activity_rate_keyboard())
+    sent_message = await message.answer(
+        "🏃 Оберіть ваш коефіцієнт активності, натиснувши кнопку.", reply_markup=activity_rate_keyboard(show_help=True)
+    )
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
@@ -159,8 +162,47 @@ async def calc_calories_survey_amr_handler(callback_query: CallbackQuery, state:
                 ("Коефіцієнт активності", format_number(data["amr"].value, precision=3)),
             ],
             footer="🎯 Переконайтесь, що всі дані правильні, та оберіть вашу мету, натиснувши відповідну кнопку.",
+            bold_detail_name=False,
+            bold_detail_value=True,
         ),
         reply_markup=weight_target_keyboard(),
+    )
+
+
+@router.callback_query(CalcCaloriesSurvey.amr, F.data == ACTIVITY_RATE_HELP_DATA)
+async def calc_calories_survey_amr_help_handler(callback_query: CallbackQuery) -> None:
+    await callback_query.answer()
+    await callback_query.message.edit_text(
+        build_detailed_message(
+            title="ℹ️ Види активності та їх коефіцієнти",
+            details=[
+                (
+                    f"Мінімальна активність (AMR: {ActivityRate.SEDENTARY.value})",
+                    f"сидячий спосіб життя, майже відсутня фізична активність, відсутність регулярних тренувань",
+                ),
+                (
+                    f"Легка активність (AMR: {ActivityRate.LIGHTLY_ACTIVE.value})",
+                    "малорухливий спосіб життя, легкі фізичні навантаження, тренування 1-3 рази на тиждень",
+                ),
+                (
+                    f"Середня активність (AMR: {ActivityRate.MODERATELY_ACTIVE.value})",
+                    "активний спосіб життя, тренування 3-5 разів на тиждень",
+                ),
+                (
+                    f"Висока активність (AMR: {ActivityRate.VERY_ACTIVE.value})",
+                    "щоденні тренування, інтенсивні спортивні заняття, важка фізична робота",
+                ),
+                (
+                    f"Дуже висока активність (AMR: {ActivityRate.EXTRA_ACTIVE.value})",
+                    "тренування двічі на день, професійний спорт, дуже важка фізична праця",
+                ),
+            ],
+            footer="🏃 Оберіть ваш коефіцієнт активності, натиснувши кнопку, що найбільше відповідає вашому способу життя.",
+            numerate_details=True,
+            details_sep="\n\n",
+            italic_footer=False,
+        ),
+        reply_markup=activity_rate_keyboard(),
     )
 
 
@@ -196,6 +238,8 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
                 + md.hbold(get_tail(WEIGHT_TARGET_TO_TEXT[data["weight_target"]]).upper())
                 + ", розраховані на основі вхідних даних."
             ),
+            bold_detail_name=False,
+            bold_detail_value=True,
         )
     )
 
@@ -227,6 +271,8 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
                 + "ці дані не є достовірно точними, оскільки вони залежать від індивідуальних особливостей вашого "
                 + "організму. Використовуйте їх як відправну точку та коригуйте на основі ваших результатів."
             ),
+            bold_detail_name=False,
+            bold_detail_value=True,
         )
     )
     # TODO: add a button to round values & a button to show detailed info (lbm, bmr, tef...).
