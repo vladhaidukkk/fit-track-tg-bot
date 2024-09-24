@@ -1,5 +1,5 @@
-def format_number(number: int | float, unit: str = "", *, sep: str = " ") -> str:
-    formatted_number = f"{number:.2f}" if isinstance(number, float) else f"{number}"
+def format_number(number: int | float, unit: str = "", *, sep: str = " ", precision: int = 2) -> str:
+    formatted_number = f"{number:.{precision}f}".rstrip(".0") if isinstance(number, float) else f"{number}"
     return f"{formatted_number}{sep}{unit}" if unit else formatted_number
 
 

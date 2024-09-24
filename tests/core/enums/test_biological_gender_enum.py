@@ -1,4 +1,4 @@
-from bot.enums.biological_gender import BiologicalGender
+from bot.core.enums.biological_gender import BiologicalGender
 
 
 class TestBiologicalGenderEnum:

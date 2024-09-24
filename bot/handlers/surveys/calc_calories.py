@@ -5,6 +5,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils import markdown as md
 
 from bot.core.nutrition_calculator import calc_nutritional_profile
+from bot.keyboards.activity_rate import ACTIVITY_RATE_TO_DATA, activity_rate_keyboard
 from bot.keyboards.biological_gender import (
     BIOLOGICAL_GENDER_TO_DATA,
     BIOLOGICAL_GENDER_TO_TEXT,
@@ -50,7 +51,7 @@ async def calc_calories_button_handler(message: Message, state: FSMContext) -> N
     sent_message = await message.answer(
         "🚻 Оберіть вашу біологічну стать, натиснувши кнопку.", reply_markup=biological_gender_keyboard()
     )
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
 
 
 @router.callback_query(CalcCaloriesSurvey.biological_gender, F.data.in_(BIOLOGICAL_GENDER_TO_DATA.values()))
@@ -126,7 +127,7 @@ async def calc_calories_survey_fat_pct_handler(message: Message, state: FSMConte
     await state.update_data(fat_pct=fat_pct)
     await state.set_state(CalcCaloriesSurvey.amr)
 
-    sent_message = await message.answer("🏃 Вкажіть ваш коефіцієнт активності:")
+    sent_message = await message.answer("🏃 Вкажіть ваш коефіцієнт активності:", reply_markup=activity_rate_keyboard())
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
@@ -136,17 +137,17 @@ async def calc_calories_survey_invalid_fat_pct_handler(message: Message, state: 
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCaloriesSurvey.amr, F.text.regexp(r"^\d+(\.\d+)?$"))
-async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) -> None:
-    await add_messages_to_delete(state=state, message_ids=[message.message_id])
-    await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state)
+@router.callback_query(CalcCaloriesSurvey.amr, F.data.in_(ACTIVITY_RATE_TO_DATA.values()))
+async def calc_calories_survey_amr_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+    await add_messages_to_delete(state=state, message_ids=[callback_query.message.message_id])
+    await clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, state=state)
 
-    amr = float(message.text)
+    amr = get_key_by_value(ACTIVITY_RATE_TO_DATA, callback_query.data)
     await state.update_data(amr=amr)
     data = await state.get_data()
     await state.set_state(CalcCaloriesSurvey.weight_target)
 
-    await message.answer(
+    await callback_query.message.answer(
         build_detailed_message(
             title="📋 Вхідні дані",
             details=[
@@ -155,7 +156,7 @@ async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) 
                 ("Ріст", format_number(data["height"], "см")),
                 ("Вага", format_number(data["weight"], "кг")),
                 ("Відсоток жиру", format_number(data["fat_pct"], "%", sep="")),
-                ("Коефіцієнт активності", format_number(data["amr"])),
+                ("Коефіцієнт активності", format_number(data["amr"].value, precision=3)),
             ],
             footer="🎯 Переконайтесь, що всі дані правильні, та оберіть вашу мету, натиснувши відповідну кнопку.",
         ),
@@ -163,9 +164,9 @@ async def calc_calories_survey_amr_handler(message: Message, state: FSMContext) 
     )
 
 
-@router.message(CalcCaloriesSurvey.amr, ~F.text.regexp(r"^\d+(\.\d+)?$"))
+@router.message(CalcCaloriesSurvey.amr)
 async def calc_calories_survey_invalid_amr_handler(message: Message, state: FSMContext) -> None:
-    sent_message = await message.answer("⚠️ Коефіцієнт активності повинен бути числом. Введіть його ще раз:")
+    sent_message = await message.answer("⚠️ Оберіть коефіцієнт активності, натиснувши кнопку під повідомленням.")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
@@ -188,12 +189,12 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
                 ("Ріст", format_number(data["height"], "см")),
                 ("Вага", format_number(data["weight"], "кг")),
                 ("Відсоток жиру", format_number(data["fat_pct"], "%", sep="")),
-                ("Коефіцієнт активності", format_number(data["amr"])),
+                ("Коефіцієнт активності", format_number(data["amr"].value, precision=3)),
             ],
             footer=(
-                "🎯 Нижче ви бачите рекомендовані поживні показники щоб " +
-                md.hbold(get_tail(WEIGHT_TARGET_TO_TEXT[data["weight_target"]]).upper()) +
-                ", розраховані на основі вхідних даних."
+                "🎯 Нижче ви бачите рекомендовані поживні показники щоб "
+                + md.hbold(get_tail(WEIGHT_TARGET_TO_TEXT[data["weight_target"]]).upper())
+                + ", розраховані на основі вхідних даних."
             ),
         )
     )
@@ -222,10 +223,10 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
                 ("Макс. доза кофеїну", format_number(nutritional_profile["caffeine_max"], "мг")),
             ],
             footer=(
-                md.hbold("⚠️ Зверніть увагу: ") +
-                "ці дані не є достовірно точними, оскільки вони залежать від індивідуальних особливостей вашого " +
-                "організму. Використовуйте їх як відправну точку та коригуйте на основі ваших результатів."
-            )
+                md.hbold("⚠️ Зверніть увагу: ")
+                + "ці дані не є достовірно точними, оскільки вони залежать від індивідуальних особливостей вашого "
+                + "організму. Використовуйте їх як відправну точку та коригуйте на основі ваших результатів."
+            ),
         )
     )
     # TODO: add a button to round values & a button to show detailed info (lbm, bmr, tef...).

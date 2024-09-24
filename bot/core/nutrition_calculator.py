@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from bot.enums import BiologicalGender, WeightTarget
+from bot.core.enums import ActivityRate, BiologicalGender, WeightTarget
 
 
 def calc_lbm(*, full_weight: float, fat_pct: int) -> float:
@@ -40,7 +40,9 @@ def calc_bmr(*, gender: BiologicalGender, age: int, height: float, weight: float
     )
 
 
-def calc_tef(gender: BiologicalGender, age: int, height: float, weight: float, fat_pct: int, amr: float) -> float:
+def calc_tef(
+    gender: BiologicalGender, age: int, height: float, weight: float, fat_pct: int, amr: ActivityRate
+) -> float:
     """Calculate the thermic effect of food (TEF).
 
     Args:
@@ -49,14 +51,14 @@ def calc_tef(gender: BiologicalGender, age: int, height: float, weight: float, f
         height: Height of the person in centimeters.
         weight: Weight of the person in kilograms.
         fat_pct: Body fat percentage.
-        amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
+        amr: Activity multiplier rate (e.g., sedentary, lightly active, etc.).
 
     Returns:
         The TEF in calories/day.
 
     """
     bmr = calc_bmr(gender=gender, age=age, height=height, weight=weight, fat_pct=fat_pct)
-    return bmr * amr / 10
+    return bmr * amr.value / 10
 
 
 def calc_calories(
@@ -66,7 +68,7 @@ def calc_calories(
     height: float,
     weight: float,
     fat_pct: int,
-    amr: float,
+    amr: ActivityRate,
     target: WeightTarget = WeightTarget.MAINTAIN,
 ) -> float:
     """Calculate daily calorie needs.
@@ -77,7 +79,7 @@ def calc_calories(
         height: Height of the person in centimeters.
         weight: Weight of the person in kilograms.
         fat_pct: Body fat percentage.
-        amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
+        amr: Activity multiplier rate (e.g., sedentary, lightly active, etc.).
         target: Desired impact on weight from a process perspective.
 
     Returns:
@@ -94,7 +96,7 @@ def calc_calories(
     }
     coefficient = target_to_coefficient[target]
 
-    return (bmr * amr + tef) * coefficient
+    return (bmr * amr.value + tef) * coefficient
 
 
 def calc_proteins(*, weight: float, fat_pct: int, target: WeightTarget = WeightTarget.MAINTAIN) -> float:
@@ -135,7 +137,7 @@ def calc_carbohydrates(
     height: float,
     weight: float,
     fat_pct: int,
-    amr: float,
+    amr: ActivityRate,
     target: WeightTarget = WeightTarget.MAINTAIN,
 ) -> float:
     """Calculate daily carbohydrate needs.
@@ -146,7 +148,7 @@ def calc_carbohydrates(
         height: Height of the person in centimeters.
         weight: Weight of the person in kilograms.
         fat_pct: Body fat percentage.
-        amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
+        amr: Activity multiplier rate (e.g., sedentary, lightly active, etc.).
         target: Desired impact on weight from a process perspective.
 
     Returns:
@@ -189,7 +191,7 @@ def calc_fiber(
     height: float,
     weight: float,
     fat_pct: int,
-    amr: float,
+    amr: ActivityRate,
     target: WeightTarget = WeightTarget.MAINTAIN,
 ) -> float:
     """Calculate daily fiber needs.
@@ -200,7 +202,7 @@ def calc_fiber(
         height: Height of the person in centimeters.
         weight: Weight of the person in kilograms.
         fat_pct: Body fat percentage.
-        amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
+        amr: Activity multiplier rate (e.g., sedentary, lightly active, etc.).
         target: Desired impact on weight from a process perspective.
 
     Returns:
@@ -279,7 +281,7 @@ def calc_nutritional_profile(
     height: float,
     weight: float,
     fat_pct: int,
-    amr: float,
+    amr: ActivityRate,
     target: WeightTarget = WeightTarget.MAINTAIN,
 ) -> NutritionalProfile:
     """Calculate a comprehensive nutritional profile.
@@ -290,7 +292,7 @@ def calc_nutritional_profile(
         height: Height of the person in centimeters.
         weight: Weight of the person in kilograms.
         fat_pct: Body fat percentage.
-        amr: Activity Multiplier Rate (e.g., 1.2 for sedentary, 1.375 for lightly active, etc.).
+        amr: Activity multiplier rate (e.g., sedentary, lightly active, etc.).
         target: Desired impact on weight from a process perspective.
 
     Returns:

@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from bot.enums import BiologicalGender
+from bot.core.enums import BiologicalGender
 
 BIOLOGICAL_GENDER_TO_TEXT = {
     BiologicalGender.MALE: "🚹 Чоловік",
