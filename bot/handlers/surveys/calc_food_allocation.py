@@ -8,6 +8,7 @@ from bot.keyboards.root import RootKeyboardText
 from bot.regexps import float_regexp
 from bot.utils.format_utils import format_number
 from bot.utils.message_utils import build_detailed_message
+from bot.utils.survey_utils import add_messages_to_delete, clear_messages
 
 router = Router(name=__name__)
 
@@ -21,7 +22,8 @@ class CalcFoodAllocationSurvey(StatesGroup):
 @router.message(F.text == RootKeyboardText.CALC_FOOD_ALLOCATION)
 async def calc_food_allocation_button_handler(message: Message, state: FSMContext) -> None:
     await state.set_state(CalcFoodAllocationSurvey.first_dry_mass)
-    await message.answer("1️⃣ Вкажіть суху вагу продукту для першої особи (в грамах):")
+    sent_message = await message.answer("1️⃣ Вкажіть суху вагу продукту для першої особи (в грамах):")
+    await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
 
 
 @router.message(CalcFoodAllocationSurvey.first_dry_mass, F.text.regexp(float_regexp))
@@ -29,7 +31,9 @@ async def calc_food_allocation_survey_first_dry_mass_handler(message: Message, s
     first_dry_mass = float(message.text)
     await state.update_data(first_dry_mass=first_dry_mass)
     await state.set_state(CalcFoodAllocationSurvey.second_dry_mass)
-    await message.answer("2️⃣ Вкажіть суху вагу продукту для другої особи (в грамах):")
+
+    sent_message = await message.answer("2️⃣ Вкажіть суху вагу продукту для другої особи (в грамах):")
+    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
 @router.message(CalcFoodAllocationSurvey.second_dry_mass, F.text.regexp(float_regexp))
@@ -37,11 +41,16 @@ async def calc_food_allocation_survey_second_dry_mass_handler(message: Message, 
     second_dry_mass = float(message.text)
     await state.update_data(second_dry_mass=second_dry_mass)
     await state.set_state(CalcFoodAllocationSurvey.total_ready_mass)
-    await message.answer("⚖️ Вкажіть загальну вагу приготованого продукту (в грамах):")
+
+    sent_message = await message.answer("⚖️ Вкажіть загальну вагу приготованого продукту (в грамах):")
+    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
 @router.message(CalcFoodAllocationSurvey.total_ready_mass, F.text.regexp(float_regexp))
 async def calc_food_allocation_survey_total_ready_mass_handler(message: Message, state: FSMContext) -> None:
+    await add_messages_to_delete(state=state, message_ids=[message.message_id])
+    await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state)
+
     total_ready_mass = float(message.text)
     await state.update_data(total_ready_mass=total_ready_mass)
     data = await state.get_data()
@@ -67,5 +76,6 @@ async def calc_food_allocation_survey_total_ready_mass_handler(message: Message,
 @router.message(CalcFoodAllocationSurvey.first_dry_mass)
 @router.message(CalcFoodAllocationSurvey.second_dry_mass)
 @router.message(CalcFoodAllocationSurvey.total_ready_mass)
-async def calc_food_allocation_survey_invalid_mass_handler(message: Message) -> None:
-    await message.answer("⚠️ Вага повинна бути числом. Введіть її ще раз:")
+async def calc_food_allocation_survey_invalid_mass_handler(message: Message, state: FSMContext) -> None:
+    sent_message = await message.answer("⚠️ Вага повинна бути числом. Введіть її ще раз:")
+    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])

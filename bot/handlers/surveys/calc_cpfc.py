@@ -1,4 +1,4 @@
-from aiogram import Bot, F, Router
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
@@ -25,6 +25,7 @@ from bot.utils.dict_utils import get_key_by_value
 from bot.utils.format_utils import format_age, format_number, format_numbers_range
 from bot.utils.message_utils import build_detailed_message
 from bot.utils.string_utils import get_tail
+from bot.utils.survey_utils import add_messages_to_delete, clear_messages
 
 router = Router(name=__name__)
 
@@ -38,20 +39,6 @@ class CalcCPFCSurvey(StatesGroup):
     amr = State()
     amr_ai_query = State()
     weight_target = State()
-
-
-async def add_messages_to_delete(*, state: FSMContext, message_ids: list[int]) -> None:
-    data = await state.get_data()
-    messages_to_delete = data.get("messages_to_delete", [])
-    await state.update_data(messages_to_delete=[*messages_to_delete, *message_ids])
-
-
-async def clear_messages(*, bot: Bot, chat_id: int | str, state: FSMContext) -> None:
-    data = await state.get_data()
-    messages_to_delete = data.get("messages_to_delete", [])
-    if messages_to_delete:
-        await bot.delete_messages(chat_id=chat_id, message_ids=messages_to_delete)
-        await state.update_data(messages_to_delete=[])
 
 
 @router.message(F.text == RootKeyboardText.CALC_CPFC)
