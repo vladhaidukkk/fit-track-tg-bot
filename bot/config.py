@@ -8,6 +8,7 @@ from bot.logger import LogLevelName
 class BotSettings(BaseModel):
     name: str = "FitTrack Bot"
     token: str
+    privileged_user_ids: set[int] = set()
 
 
 class DatabaseSettings(BaseModel):
