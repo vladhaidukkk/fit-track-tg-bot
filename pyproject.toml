@@ -11,6 +11,7 @@ alembic = "^1.13.2"
 inflect = "^7.4.0"
 pytest = "^8.3.3"
 colorlog = "^6.8.2"
+openai = "^1.47.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.4"

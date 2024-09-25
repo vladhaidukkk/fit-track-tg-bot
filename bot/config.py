@@ -1,3 +1,4 @@
+from openai.types import ChatModel
 from pydantic import BaseModel, Field, PostgresDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -36,12 +37,20 @@ class AlchemySettings(BaseModel):
     max_overflow: int = 10
 
 
+class OpenAISettings(BaseModel):
+    enabled: bool = True
+    api_key: str
+    model: ChatModel
+    stub_responses: bool = False
+
+
 class Settings(BaseSettings):
     log_level_name: LogLevelName = "INFO"
 
     bot: BotSettings
     db: DatabaseSettings
     alchemy: AlchemySettings = AlchemySettings()
+    openai: OpenAISettings
 
     model_config = SettingsConfigDict(env_nested_delimiter="__", env_ignore_empty=True)
 

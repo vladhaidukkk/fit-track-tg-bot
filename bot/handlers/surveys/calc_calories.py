@@ -6,7 +6,12 @@ from aiogram.utils import markdown as md
 
 from bot.core.enums import ActivityRate
 from bot.core.nutrition_calculator import calc_nutritional_profile
-from bot.keyboards.activity_rate import ACTIVITY_RATE_HELP_DATA, ACTIVITY_RATE_TO_DATA, activity_rate_keyboard
+from bot.keyboards.activity_rate import (
+    ACTIVITY_RATE_AI_HELP_DATA,
+    ACTIVITY_RATE_HELP_DATA,
+    ACTIVITY_RATE_TO_DATA,
+    activity_rate_keyboard,
+)
 from bot.keyboards.biological_gender import (
     BIOLOGICAL_GENDER_TO_DATA,
     BIOLOGICAL_GENDER_TO_TEXT,
@@ -14,6 +19,7 @@ from bot.keyboards.biological_gender import (
 )
 from bot.keyboards.root import RootKeyboardText
 from bot.keyboards.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
+from bot.utils.ai_utils import generate_text
 from bot.utils.dict_utils import get_key_by_value
 from bot.utils.format_utils import format_age, format_number
 from bot.utils.message_utils import build_detailed_message
@@ -29,6 +35,7 @@ class CalcCaloriesSurvey(StatesGroup):
     weight = State()
     fat_pct = State()
     amr = State()
+    amr_ai_query = State()
     weight_target = State()
 
 
@@ -178,7 +185,7 @@ async def calc_calories_survey_amr_help_handler(callback_query: CallbackQuery) -
             details=[
                 (
                     f"Мінімальна активність (AMR: {ActivityRate.SEDENTARY.value})",
-                    f"сидячий спосіб життя, майже відсутня фізична активність, відсутність регулярних тренувань",
+                    "сидячий спосіб життя, майже відсутня фізична активність, відсутність регулярних тренувань",
                 ),
                 (
                     f"Легка активність (AMR: {ActivityRate.LIGHTLY_ACTIVE.value})",
@@ -197,13 +204,38 @@ async def calc_calories_survey_amr_help_handler(callback_query: CallbackQuery) -
                     "тренування двічі на день, професійний спорт, дуже важка фізична праця",
                 ),
             ],
-            footer="🏃 Оберіть ваш коефіцієнт активності, натиснувши кнопку, що найбільше відповідає вашому способу життя.",
+            footer="🏃 Оберіть коефіцієнт активності, що найбільше відповідає вашому способу життя, натиснувши кнопку.",
             numerate_details=True,
             details_sep="\n\n",
             italic_footer=False,
         ),
-        reply_markup=activity_rate_keyboard(),
+        reply_markup=activity_rate_keyboard(show_ai_help=True),
     )
+
+
+@router.callback_query(CalcCaloriesSurvey.amr, F.data == ACTIVITY_RATE_AI_HELP_DATA)
+async def calc_calories_survey_amr_ai_help_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+    await state.set_state(CalcCaloriesSurvey.amr_ai_query)
+
+    await callback_query.answer()
+    await callback_query.message.edit_reply_markup(reply_markup=activity_rate_keyboard())
+    sent_message = await callback_query.message.answer(
+        "🤖 Детально опишіть ваш спосіб життя, щоб AI міг допомогти вам визначити ваш коефіцієнт активності:"
+    )
+    await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
+
+
+@router.message(CalcCaloriesSurvey.amr_ai_query)
+async def calc_calories_survey_amr_ai_query_handler(message: Message, state: FSMContext) -> None:
+    await state.set_state(CalcCaloriesSurvey.amr)
+
+    query = (
+        "Будь ласка, визначте коефіцієнт активності (1.2, 1.375, 1.55, 1.725 або 1.9) для наступного опису: "
+        f'"{message.text}".'
+    )
+    ai_response = await generate_text(query=query)
+    sent_message = await message.answer(md.text(md.hbold("🤖 Відповідь AI:"), f'"{ai_response.rstrip(".")}".'))
+    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
 @router.message(CalcCaloriesSurvey.amr)
