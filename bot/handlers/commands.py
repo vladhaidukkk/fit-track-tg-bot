@@ -1,5 +1,5 @@
 from aiogram import Router
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
 from aiogram.utils import markdown as md
 
@@ -24,7 +24,7 @@ async def start_command_handler(message: Message, user: UserModel | None) -> Non
             "Давайте розпочнемо вашу фітнес-подорож разом.",
             sep="\n",
         ),
-        reply_markup=root_keyboard(),
+        reply_markup=root_keyboard(user_id=message.from_user.id),
     )
 
 
