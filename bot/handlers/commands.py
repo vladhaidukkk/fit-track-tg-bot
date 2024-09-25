@@ -1,5 +1,5 @@
 from aiogram import Router
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 from aiogram.utils import markdown as md
 
@@ -26,3 +26,8 @@ async def start_command_handler(message: Message, user: UserModel | None) -> Non
         ),
         reply_markup=root_keyboard(),
     )
+
+
+@router.message(Command("id"))
+async def id_command_handler(message: Message) -> None:
+    await message.answer(md.hcode(message.from_user.id))
