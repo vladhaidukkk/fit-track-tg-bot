@@ -19,6 +19,7 @@ from bot.keyboards.biological_gender import (
 )
 from bot.keyboards.root import RootKeyboardText
 from bot.keyboards.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
+from bot.regexps import float_regexp, int_regexp
 from bot.utils.ai_utils import generate_text
 from bot.utils.dict_utils import get_key_by_value
 from bot.utils.format_utils import format_age, format_number, format_numbers_range
@@ -81,7 +82,7 @@ async def calc_cpfc_survey_unknown_biological_gender_handler(message: Message, s
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.age, F.text.regexp(r"^\d+$"))
+@router.message(CalcCPFCSurvey.age, F.text.regexp(int_regexp))
 async def calc_cpfc_survey_age_handler(message: Message, state: FSMContext) -> None:
     age = int(message.text)
     await state.update_data(age=age)
@@ -91,13 +92,13 @@ async def calc_cpfc_survey_age_handler(message: Message, state: FSMContext) -> N
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.age, ~F.text.regexp(r"^\d+$"))
+@router.message(CalcCPFCSurvey.age, ~F.text.regexp(int_regexp))
 async def calc_cpfc_survey_invalid_age_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Вік повинен бути цілим числом. Введіть його ще раз:")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.height, F.text.regexp(r"^\d+(\.\d+)?$"))
+@router.message(CalcCPFCSurvey.height, F.text.regexp(float_regexp))
 async def calc_cpfc_survey_height_handler(message: Message, state: FSMContext) -> None:
     height = float(message.text)
     await state.update_data(height=height)
@@ -107,13 +108,13 @@ async def calc_cpfc_survey_height_handler(message: Message, state: FSMContext) -
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.height, ~F.text.regexp(r"^\d+(\.\d+)?$"))
+@router.message(CalcCPFCSurvey.height, ~F.text.regexp(float_regexp))
 async def calc_cpfc_survey_invalid_height_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Зріст повинен бути числом. Введіть його ще раз:")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.weight, F.text.regexp(r"^\d+(\.\d+)?$"))
+@router.message(CalcCPFCSurvey.weight, F.text.regexp(float_regexp))
 async def calc_cpfc_survey_weight_handler(message: Message, state: FSMContext) -> None:
     weight = float(message.text)
     await state.update_data(weight=weight)
@@ -123,13 +124,13 @@ async def calc_cpfc_survey_weight_handler(message: Message, state: FSMContext) -
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.weight, ~F.text.regexp(r"^\d+(\.\d+)?$"))
+@router.message(CalcCPFCSurvey.weight, ~F.text.regexp(float_regexp))
 async def calc_cpfc_survey_invalid_weight_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Вага повинна бути числом. Введіть її ще раз:")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.fat_pct, F.text.regexp(r"^\d+$"))
+@router.message(CalcCPFCSurvey.fat_pct, F.text.regexp(int_regexp))
 async def calc_cpfc_survey_fat_pct_handler(message: Message, state: FSMContext) -> None:
     fat_pct = int(message.text)
     await state.update_data(fat_pct=fat_pct)
@@ -141,7 +142,7 @@ async def calc_cpfc_survey_fat_pct_handler(message: Message, state: FSMContext) 
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.fat_pct, ~F.text.regexp(r"^\d+$"))
+@router.message(CalcCPFCSurvey.fat_pct, ~F.text.regexp(int_regexp))
 async def calc_cpfc_survey_invalid_fat_pct_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Відсоток жиру повинен бути цілим числом. Введіть його ще раз:")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
