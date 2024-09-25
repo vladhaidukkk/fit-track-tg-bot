@@ -21,7 +21,7 @@ from bot.keyboards.root import RootKeyboardText
 from bot.keyboards.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
 from bot.utils.ai_utils import generate_text
 from bot.utils.dict_utils import get_key_by_value
-from bot.utils.format_utils import format_age, format_number
+from bot.utils.format_utils import format_age, format_number, format_numbers_range
 from bot.utils.message_utils import build_detailed_message
 from bot.utils.string_utils import get_tail
 
@@ -284,16 +284,20 @@ async def calc_cpfc_survey_weight_target_handler(callback_query: CallbackQuery, 
         amr=data["amr"],
         target=data["weight_target"],
     )
+    min_calories, max_calories = nutritional_profile["calories"]
+    min_carbohydrates, max_carbohydrates = nutritional_profile["carbohydrates"]
+    min_fiber, max_fiber = nutritional_profile["fiber"]
+
     await callback_query.message.answer(
         build_detailed_message(
             title="📊 Рекомендовані поживні показники",
             details=[
-                ("Калорії", format_number(nutritional_profile["calories"], "ккал")),
+                ("Калорії", format_numbers_range(min_calories, max_calories, "ккал")),
                 ("Білки", format_number(nutritional_profile["proteins"], "г")),
                 ("Жири", format_number(nutritional_profile["fats"], "г")),
-                ("Вуглеводи", format_number(nutritional_profile["carbohydrates"], "г")),
+                ("Вуглеводи", format_numbers_range(min_carbohydrates, max_carbohydrates, "г")),
                 ("Вода", format_number(nutritional_profile["water"], "л")),
-                ("Клітковина", format_number(nutritional_profile["fiber"], "г")),
+                ("Клітковина", format_numbers_range(min_fiber, max_fiber, "г")),
                 ("Сіль", format_number(nutritional_profile["salt"], "г")),
                 ("Норма кофеїну", format_number(nutritional_profile["caffeine_norm"], "мг")),
                 ("Макс. доза кофеїну", format_number(nutritional_profile["caffeine_max"], "мг")),

@@ -1,6 +1,23 @@
 def format_number(number: int | float, unit: str = "", *, sep: str = " ", precision: int = 2) -> str:
+    # TODO: fix bug with 170 -> 17.
     formatted_number = f"{number:.{precision}f}".rstrip(".0") if isinstance(number, float) else f"{number}"
     return f"{formatted_number}{sep}{unit}" if unit else formatted_number
+
+
+def format_numbers_range(
+    start_number: int | float, end_num: int | float, unit: str = "", *, sep: str = " ", precision: int = 2
+) -> str:
+    formatted_start_number = format_number(start_number, precision=precision)
+    formatted_end_number = format_number(end_num, precision=precision)
+
+    if formatted_start_number == formatted_end_number:
+        return formatted_start_number
+
+    return (
+        f"{formatted_start_number}-{formatted_end_number}{sep}{unit}"
+        if unit
+        else f"{formatted_start_number}-{formatted_end_number}"
+    )
 
 
 def format_age(age: int) -> str:
