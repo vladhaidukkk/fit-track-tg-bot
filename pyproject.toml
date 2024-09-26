@@ -12,6 +12,7 @@ inflect = "^7.4.0"
 pytest = "^8.3.3"
 colorlog = "^6.8.2"
 openai = "^1.47.1"
+sentry-sdk = "^2.14.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.4"

@@ -46,6 +46,10 @@ class OpenAISettings(BaseModel):
     stub_responses: bool = False
 
 
+class SentrySettings(BaseModel):
+    dsn: str | None = None
+
+
 class Settings(BaseSettings):
     log_level_name: LogLevelName = "INFO"
 
@@ -53,6 +57,7 @@ class Settings(BaseSettings):
     db: DatabaseSettings
     alchemy: AlchemySettings = AlchemySettings()
     openai: OpenAISettings
+    sentry: SentrySettings = SentrySettings()
 
     model_config = SettingsConfigDict(env_nested_delimiter="__", env_ignore_empty=True)
 
