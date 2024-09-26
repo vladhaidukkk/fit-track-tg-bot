@@ -1,6 +1,5 @@
 def format_number(number: int | float, unit: str = "", *, sep: str = " ", precision: int = 2) -> str:
-    # TODO: fix bug with 170 -> 17.
-    formatted_number = f"{number:.{precision}f}".rstrip(".0") if isinstance(number, float) else f"{number}"
+    formatted_number = f"{number:.0f}" if number.is_integer() else f"{number:.{precision}f}"
     return f"{formatted_number}{sep}{unit}" if unit else formatted_number
 
 
