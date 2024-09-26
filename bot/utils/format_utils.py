@@ -1,10 +1,10 @@
-def format_number(number: int | float, unit: str = "", *, sep: str = " ", precision: int = 2) -> str:
+def format_number(number: int | float, unit: str = "", *, sep: str = " ", precision: int = 1) -> str:
     formatted_number = f"{number:.0f}" if number.is_integer() else f"{number:.{precision}f}".rstrip("0").rstrip(".")
     return f"{formatted_number}{sep}{unit}" if unit else formatted_number
 
 
 def format_numbers_range(
-    start_number: int | float, end_num: int | float, unit: str = "", *, sep: str = " ", precision: int = 2
+    start_number: int | float, end_num: int | float, unit: str = "", *, sep: str = " ", precision: int = 1
 ) -> str:
     formatted_start_number = format_number(start_number, precision=precision)
     formatted_end_number = format_number(end_num, precision=precision)

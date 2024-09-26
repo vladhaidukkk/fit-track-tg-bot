@@ -281,15 +281,15 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
         build_detailed_message(
             title="📊 Рекомендовані поживні показники",
             details=[
-                ("Калорії", format_numbers_range(min_calories, max_calories, "ккал")),
-                ("Білки", format_number(nutritional_profile["proteins"], "г")),
-                ("Жири", format_number(nutritional_profile["fats"], "г")),
-                ("Вуглеводи", format_numbers_range(min_carbohydrates, max_carbohydrates, "г")),
-                ("Вода", format_number(nutritional_profile["water"], "л")),
+                ("Калорії", format_numbers_range(min_calories, max_calories, "ккал", precision=0)),
+                ("Білки", format_number(nutritional_profile["proteins"], "г", precision=0)),
+                ("Жири", format_number(nutritional_profile["fats"], "г", precision=0)),
+                ("Вуглеводи", format_numbers_range(min_carbohydrates, max_carbohydrates, "г", precision=0)),
+                ("Вода", format_number(nutritional_profile["water"], "л", precision=2)),
                 ("Клітковина", format_numbers_range(min_fiber, max_fiber, "г")),
                 ("Сіль", format_number(nutritional_profile["salt"], "г")),
-                ("Норма кофеїну", format_number(nutritional_profile["caffeine_norm"], "мг")),
-                ("Макс. доза кофеїну", format_number(nutritional_profile["caffeine_max"], "мг")),
+                ("Норма кофеїну", format_number(nutritional_profile["caffeine_norm"], "мг", precision=0)),
+                ("Макс. доза кофеїну", format_number(nutritional_profile["caffeine_max"], "мг", precision=0)),
             ],
             footer=(
                 md.hbold("⚠️ Зверніть увагу: ")
@@ -300,7 +300,7 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
             bold_detail_value=True,
         )
     )
-    # TODO: add a button to round values & a button to show detailed info (lbm, bmr, tef...).
+    # TODO: add a button to show detailed info (lbm, bmr, tef...).
 
 
 @router.message(CalcCaloriesSurvey.weight_target)
