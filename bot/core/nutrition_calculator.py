@@ -3,7 +3,7 @@ from typing import TypedDict
 from bot.core.enums import ActivityRate, BiologicalGender, WeightTarget
 
 
-def calc_lbm(*, full_weight: float, fat_pct: int) -> float:
+def calc_lbm(*, full_weight: float, fat_pct: float) -> float:
     """Calculate lean body mass (LBM).
 
     Args:
@@ -18,7 +18,7 @@ def calc_lbm(*, full_weight: float, fat_pct: int) -> float:
     return full_weight - fat_weight
 
 
-def calc_bmr(*, gender: BiologicalGender, age: int, height: float, weight: float, fat_pct: int) -> float:
+def calc_bmr(*, gender: BiologicalGender, age: int, height: float, weight: float, fat_pct: float) -> float:
     """Calculate basal metabolic rate (BMR).
 
     Args:
@@ -41,7 +41,7 @@ def calc_bmr(*, gender: BiologicalGender, age: int, height: float, weight: float
 
 
 def calc_tef(
-    gender: BiologicalGender, age: int, height: float, weight: float, fat_pct: int, amr: ActivityRate
+    gender: BiologicalGender, age: int, height: float, weight: float, fat_pct: float, amr: ActivityRate
 ) -> float:
     """Calculate the thermic effect of food (TEF).
 
@@ -67,7 +67,7 @@ def calc_calories(
     age: int,
     height: float,
     weight: float,
-    fat_pct: int,
+    fat_pct: float,
     amr: ActivityRate,
     target: WeightTarget = WeightTarget.MAINTAIN,
 ) -> tuple[float, float]:
@@ -102,7 +102,7 @@ def calc_calories(
     return daily_calories * min_coefficient, daily_calories * max_coefficient
 
 
-def calc_proteins(*, weight: float, fat_pct: int, target: WeightTarget = WeightTarget.MAINTAIN) -> float:
+def calc_proteins(*, weight: float, fat_pct: float, target: WeightTarget = WeightTarget.MAINTAIN) -> float:
     """Calculate daily protein needs.
 
     Args:
@@ -119,7 +119,7 @@ def calc_proteins(*, weight: float, fat_pct: int, target: WeightTarget = WeightT
     return lbm * coefficient
 
 
-def calc_fats(*, weight: float, fat_pct: int) -> float:
+def calc_fats(*, weight: float, fat_pct: float) -> float:
     """Calculate daily fat needs.
 
     Args:
@@ -139,7 +139,7 @@ def calc_carbohydrates(
     age: int,
     height: float,
     weight: float,
-    fat_pct: int,
+    fat_pct: float,
     amr: ActivityRate,
     target: WeightTarget = WeightTarget.MAINTAIN,
 ) -> tuple[float, float]:
@@ -172,7 +172,7 @@ def calc_carbohydrates(
     return (min_calories - (proteins * 4) - (fats * 9)) / 4, (max_calories - (proteins * 4) - (fats * 9)) / 4
 
 
-def calc_water(*, weight: float, fat_pct: int) -> float:
+def calc_water(*, weight: float, fat_pct: float) -> float:
     """Calculate daily water needs.
 
     Args:
@@ -193,7 +193,7 @@ def calc_fiber(
     age: int,
     height: float,
     weight: float,
-    fat_pct: int,
+    fat_pct: float,
     amr: ActivityRate,
     target: WeightTarget = WeightTarget.MAINTAIN,
 ) -> tuple[float, float]:
@@ -224,7 +224,7 @@ def calc_fiber(
     return min_calories / 1000 * 10, max_calories / 1000 * 10
 
 
-def calc_salt(*, weight: float, fat_pct: int) -> float:
+def calc_salt(*, weight: float, fat_pct: float) -> float:
     """Calculate daily salt needs.
 
     Args:
@@ -283,7 +283,7 @@ def calc_nutritional_profile(
     age: int,
     height: float,
     weight: float,
-    fat_pct: int,
+    fat_pct: float,
     amr: ActivityRate,
     target: WeightTarget = WeightTarget.MAINTAIN,
 ) -> NutritionalProfile:

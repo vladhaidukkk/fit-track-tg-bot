@@ -24,6 +24,7 @@ from bot.utils.ai_utils import generate_text
 from bot.utils.dict_utils import get_key_by_value
 from bot.utils.format_utils import format_age, format_number, format_numbers_range
 from bot.utils.message_utils import build_detailed_message
+from bot.utils.parse_utils import parse_float
 from bot.utils.string_utils import get_tail
 from bot.utils.survey_utils import add_messages_to_delete, clear_messages
 
@@ -87,7 +88,7 @@ async def calc_cpfc_survey_invalid_age_handler(message: Message, state: FSMConte
 
 @router.message(CalcCPFCSurvey.height, F.text.regexp(float_regexp))
 async def calc_cpfc_survey_height_handler(message: Message, state: FSMContext) -> None:
-    height = float(message.text)
+    height = parse_float(message.text)
     await state.update_data(height=height)
     await state.set_state(CalcCPFCSurvey.weight)
 
@@ -103,7 +104,7 @@ async def calc_cpfc_survey_invalid_height_handler(message: Message, state: FSMCo
 
 @router.message(CalcCPFCSurvey.weight, F.text.regexp(float_regexp))
 async def calc_cpfc_survey_weight_handler(message: Message, state: FSMContext) -> None:
-    weight = float(message.text)
+    weight = parse_float(message.text)
     await state.update_data(weight=weight)
     await state.set_state(CalcCPFCSurvey.fat_pct)
 
@@ -117,9 +118,9 @@ async def calc_cpfc_survey_invalid_weight_handler(message: Message, state: FSMCo
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.fat_pct, F.text.regexp(int_regexp))
+@router.message(CalcCPFCSurvey.fat_pct, F.text.regexp(float_regexp))
 async def calc_cpfc_survey_fat_pct_handler(message: Message, state: FSMContext) -> None:
-    fat_pct = int(message.text)
+    fat_pct = parse_float(message.text)
     await state.update_data(fat_pct=fat_pct)
     await state.set_state(CalcCPFCSurvey.amr)
 
@@ -129,9 +130,9 @@ async def calc_cpfc_survey_fat_pct_handler(message: Message, state: FSMContext) 
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.fat_pct, ~F.text.regexp(int_regexp))
+@router.message(CalcCPFCSurvey.fat_pct, ~F.text.regexp(float_regexp))
 async def calc_cpfc_survey_invalid_fat_pct_handler(message: Message, state: FSMContext) -> None:
-    sent_message = await message.answer("⚠️ Відсоток жиру повинен бути цілим числом. Введіть його ще раз:")
+    sent_message = await message.answer("⚠️ Відсоток жиру повинен бути числом. Введіть його ще раз:")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
