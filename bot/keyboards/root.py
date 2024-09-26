@@ -6,8 +6,8 @@ from bot.config import settings
 
 
 class RootKeyboardText(StrEnum):
-    CALC_CPFC = "🥗 Розрахувати калорійність"
-    CALC_PFC = "🍎 Розрахувати БЖВ"
+    CALC_CALORIES = "🥗 Розрахувати калорійність"
+    ADJUST_CALORIES = "📝 Підкоригувати калораж"
     LEAVE_FEEDBACK = "💬 Залишити побажання"
     # For privileged users only.
     CALC_FOOD_ALLOCATION = "🍽️ Розрахувати розподіл їжі"
@@ -17,8 +17,8 @@ def root_keyboard(user_id: int | None = None) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text=RootKeyboardText.CALC_CPFC),
-                # KeyboardButton(text=RootKeyboardText.CALC_PFC),
+                KeyboardButton(text=RootKeyboardText.CALC_CALORIES),
+                # KeyboardButton(text=RootKeyboardText.ADJUST_CALORIES),
             ],
             (
                 [KeyboardButton(text=RootKeyboardText.CALC_FOOD_ALLOCATION)]

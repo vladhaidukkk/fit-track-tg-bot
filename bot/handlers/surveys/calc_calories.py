@@ -31,7 +31,7 @@ from bot.utils.survey_utils import add_messages_to_delete, clear_messages
 router = Router(name=__name__)
 
 
-class CalcCPFCSurvey(StatesGroup):
+class CalcCaloriesSurvey(StatesGroup):
     biological_gender = State()
     age = State()
     height = State()
@@ -42,20 +42,20 @@ class CalcCPFCSurvey(StatesGroup):
     weight_target = State()
 
 
-@router.message(F.text == RootKeyboardText.CALC_CPFC)
-async def calc_cpfc_button_handler(message: Message, state: FSMContext) -> None:
-    await state.set_state(CalcCPFCSurvey.biological_gender)
+@router.message(F.text == RootKeyboardText.CALC_CALORIES)
+async def calc_calories_button_handler(message: Message, state: FSMContext) -> None:
+    await state.set_state(CalcCaloriesSurvey.biological_gender)
     sent_message = await message.answer(
         "🚻 Оберіть вашу біологічну стать, натиснувши кнопку.", reply_markup=biological_gender_keyboard()
     )
     await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
 
 
-@router.callback_query(CalcCPFCSurvey.biological_gender, F.data.in_(BIOLOGICAL_GENDER_TO_DATA.values()))
-async def calc_cpfc_survey_biological_gender_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+@router.callback_query(CalcCaloriesSurvey.biological_gender, F.data.in_(BIOLOGICAL_GENDER_TO_DATA.values()))
+async def calc_calories_survey_biological_gender_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
     biological_gender = get_key_by_value(BIOLOGICAL_GENDER_TO_DATA, callback_query.data)
     await state.update_data(biological_gender=biological_gender)
-    await state.set_state(CalcCPFCSurvey.age)
+    await state.set_state(CalcCaloriesSurvey.age)
 
     await callback_query.answer()
     icon, output = BIOLOGICAL_GENDER_TO_TEXT[biological_gender].split(maxsplit=1)
@@ -64,65 +64,65 @@ async def calc_cpfc_survey_biological_gender_handler(callback_query: CallbackQue
     await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.biological_gender)
-async def calc_cpfc_survey_unknown_biological_gender_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.biological_gender)
+async def calc_calories_survey_unknown_biological_gender_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Оберіть біологічну стать, натиснувши кнопку під повідомленням.")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.age, F.text.regexp(int_regexp))
-async def calc_cpfc_survey_age_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.age, F.text.regexp(int_regexp))
+async def calc_calories_survey_age_handler(message: Message, state: FSMContext) -> None:
     age = int(message.text)
     await state.update_data(age=age)
-    await state.set_state(CalcCPFCSurvey.height)
+    await state.set_state(CalcCaloriesSurvey.height)
 
     sent_message = await message.answer("📏 Вкажіть ваш зріст (в сантиметрах):")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.age, ~F.text.regexp(int_regexp))
-async def calc_cpfc_survey_invalid_age_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.age, ~F.text.regexp(int_regexp))
+async def calc_calories_survey_invalid_age_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Вік повинен бути цілим числом. Введіть його ще раз:")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.height, F.text.regexp(float_regexp))
-async def calc_cpfc_survey_height_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.height, F.text.regexp(float_regexp))
+async def calc_calories_survey_height_handler(message: Message, state: FSMContext) -> None:
     height = parse_float(message.text)
     await state.update_data(height=height)
-    await state.set_state(CalcCPFCSurvey.weight)
+    await state.set_state(CalcCaloriesSurvey.weight)
 
     sent_message = await message.answer("⚖️ Вкажіть вашу вагу (в кілограмах):")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.height, ~F.text.regexp(float_regexp))
-async def calc_cpfc_survey_invalid_height_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.height, ~F.text.regexp(float_regexp))
+async def calc_calories_survey_invalid_height_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Зріст повинен бути числом. Введіть його ще раз:")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.weight, F.text.regexp(float_regexp))
-async def calc_cpfc_survey_weight_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.weight, F.text.regexp(float_regexp))
+async def calc_calories_survey_weight_handler(message: Message, state: FSMContext) -> None:
     weight = parse_float(message.text)
     await state.update_data(weight=weight)
-    await state.set_state(CalcCPFCSurvey.fat_pct)
+    await state.set_state(CalcCaloriesSurvey.fat_pct)
 
     sent_message = await message.answer("📊 Вкажіть ваш відсоток жиру:")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.weight, ~F.text.regexp(float_regexp))
-async def calc_cpfc_survey_invalid_weight_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.weight, ~F.text.regexp(float_regexp))
+async def calc_calories_survey_invalid_weight_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Вага повинна бути числом. Введіть її ще раз:")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.fat_pct, F.text.regexp(float_regexp))
-async def calc_cpfc_survey_fat_pct_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.fat_pct, F.text.regexp(float_regexp))
+async def calc_calories_survey_fat_pct_handler(message: Message, state: FSMContext) -> None:
     fat_pct = parse_float(message.text)
     await state.update_data(fat_pct=fat_pct)
-    await state.set_state(CalcCPFCSurvey.amr)
+    await state.set_state(CalcCaloriesSurvey.amr)
 
     sent_message = await message.answer(
         "🏃 Оберіть ваш коефіцієнт активності, натиснувши кнопку.", reply_markup=activity_rate_keyboard(show_help=True)
@@ -130,21 +130,21 @@ async def calc_cpfc_survey_fat_pct_handler(message: Message, state: FSMContext) 
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.fat_pct, ~F.text.regexp(float_regexp))
-async def calc_cpfc_survey_invalid_fat_pct_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.fat_pct, ~F.text.regexp(float_regexp))
+async def calc_calories_survey_invalid_fat_pct_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Відсоток жиру повинен бути числом. Введіть його ще раз:")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.callback_query(CalcCPFCSurvey.amr, F.data.in_(ACTIVITY_RATE_TO_DATA.values()))
-async def calc_cpfc_survey_amr_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+@router.callback_query(CalcCaloriesSurvey.amr, F.data.in_(ACTIVITY_RATE_TO_DATA.values()))
+async def calc_calories_survey_amr_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
     await add_messages_to_delete(state=state, message_ids=[callback_query.message.message_id])
     await clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, state=state)
 
     amr = get_key_by_value(ACTIVITY_RATE_TO_DATA, callback_query.data)
     await state.update_data(amr=amr)
     data = await state.get_data()
-    await state.set_state(CalcCPFCSurvey.weight_target)
+    await state.set_state(CalcCaloriesSurvey.weight_target)
 
     await callback_query.message.answer(
         build_detailed_message(
@@ -165,8 +165,8 @@ async def calc_cpfc_survey_amr_handler(callback_query: CallbackQuery, state: FSM
     )
 
 
-@router.callback_query(CalcCPFCSurvey.amr, F.data == ACTIVITY_RATE_HELP_DATA)
-async def calc_cpfc_survey_amr_help_handler(callback_query: CallbackQuery) -> None:
+@router.callback_query(CalcCaloriesSurvey.amr, F.data == ACTIVITY_RATE_HELP_DATA)
+async def calc_calories_survey_amr_help_handler(callback_query: CallbackQuery) -> None:
     await callback_query.answer()
     await callback_query.message.edit_text(
         build_detailed_message(
@@ -202,9 +202,9 @@ async def calc_cpfc_survey_amr_help_handler(callback_query: CallbackQuery) -> No
     )
 
 
-@router.callback_query(CalcCPFCSurvey.amr, F.data == ACTIVITY_RATE_AI_HELP_DATA)
-async def calc_cpfc_survey_amr_ai_help_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
-    await state.set_state(CalcCPFCSurvey.amr_ai_query)
+@router.callback_query(CalcCaloriesSurvey.amr, F.data == ACTIVITY_RATE_AI_HELP_DATA)
+async def calc_calories_survey_amr_ai_help_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+    await state.set_state(CalcCaloriesSurvey.amr_ai_query)
 
     await callback_query.answer()
     await callback_query.message.edit_reply_markup(reply_markup=activity_rate_keyboard())
@@ -214,9 +214,9 @@ async def calc_cpfc_survey_amr_ai_help_handler(callback_query: CallbackQuery, st
     await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.amr_ai_query)
-async def calc_cpfc_survey_amr_ai_query_handler(message: Message, state: FSMContext) -> None:
-    await state.set_state(CalcCPFCSurvey.amr)
+@router.message(CalcCaloriesSurvey.amr_ai_query)
+async def calc_calories_survey_amr_ai_query_handler(message: Message, state: FSMContext) -> None:
+    await state.set_state(CalcCaloriesSurvey.amr)
 
     query = (
         "Будь ласка, визначте коефіцієнт активності (1.2, 1.375, 1.55, 1.725 або 1.9) для наступного опису: "
@@ -227,14 +227,14 @@ async def calc_cpfc_survey_amr_ai_query_handler(message: Message, state: FSMCont
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.message(CalcCPFCSurvey.amr)
-async def calc_cpfc_survey_invalid_amr_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.amr)
+async def calc_calories_survey_invalid_amr_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Оберіть коефіцієнт активності, натиснувши кнопку під повідомленням.")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
-@router.callback_query(CalcCPFCSurvey.weight_target, F.data.in_(WEIGHT_TARGET_TO_DATA.values()))
-async def calc_cpfc_survey_weight_target_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+@router.callback_query(CalcCaloriesSurvey.weight_target, F.data.in_(WEIGHT_TARGET_TO_DATA.values()))
+async def calc_calories_survey_weight_target_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
     await clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, state=state)
 
     weight_target = get_key_by_value(WEIGHT_TARGET_TO_DATA, callback_query.data)
@@ -303,7 +303,7 @@ async def calc_cpfc_survey_weight_target_handler(callback_query: CallbackQuery, 
     # TODO: add a button to round values & a button to show detailed info (lbm, bmr, tef...).
 
 
-@router.message(CalcCPFCSurvey.weight_target)
-async def calc_cpfc_survey_unknown_weight_target_handler(message: Message, state: FSMContext) -> None:
+@router.message(CalcCaloriesSurvey.weight_target)
+async def calc_calories_survey_unknown_weight_target_handler(message: Message, state: FSMContext) -> None:
     sent_message = await message.answer("⚠️ Оберіть вашу мету, натиснувши кнопку під повідомленням.")
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
