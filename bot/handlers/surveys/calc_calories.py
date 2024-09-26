@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils import markdown as md
 
 from bot.core.enums import ActivityRate
@@ -17,12 +17,14 @@ from bot.keyboards.biological_gender import (
     BIOLOGICAL_GENDER_TO_TEXT,
     biological_gender_keyboard,
 )
+from bot.keyboards.fat_pct import FAT_PCT_HELP_DATA, fat_pct_keyboard
 from bot.keyboards.root import RootKeyboardText
 from bot.keyboards.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
 from bot.regexps import float_regexp, int_regexp
 from bot.utils.ai_utils import generate_text
 from bot.utils.dict_utils import get_key_by_value
 from bot.utils.format_utils import format_age, format_number, format_numbers_range
+from bot.utils.google_utils import generate_search_link
 from bot.utils.message_utils import build_detailed_message
 from bot.utils.parse_utils import parse_float
 from bot.utils.string_utils import get_tail
@@ -108,7 +110,7 @@ async def calc_calories_survey_weight_handler(message: Message, state: FSMContex
     await state.update_data(weight=weight)
     await state.set_state(CalcCaloriesSurvey.fat_pct)
 
-    sent_message = await message.answer("📊 Вкажіть ваш відсоток жиру:")
+    sent_message = await message.answer("🍔 Вкажіть ваш відсоток жиру:", reply_markup=fat_pct_keyboard())
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
@@ -128,6 +130,23 @@ async def calc_calories_survey_fat_pct_handler(message: Message, state: FSMConte
         "🏃 Оберіть ваш коефіцієнт активності, натиснувши кнопку.", reply_markup=activity_rate_keyboard(show_help=True)
     )
     await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+
+
+@router.callback_query(CalcCaloriesSurvey.fat_pct, F.data == FAT_PCT_HELP_DATA)
+async def calc_calories_survey_fat_pct_help_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+    data = await state.get_data()
+    fat_pct_helper_path = f"assets/{data['biological_gender']}-fat-pct-helper.jpg"
+
+    await callback_query.answer()
+    await callback_query.message.edit_text("🍔 Визначте ваш відсоток жиру, поглянувши на фото, та вкажіть значення:")
+    sent_photo = await callback_query.message.answer_photo(
+        photo=FSInputFile(path=fat_pct_helper_path),
+        caption=md.html_decoration.italic(
+            f"Якщо вам важко визначити відсоток жиру за фото, ви можете скористатися "
+            f"{md.hlink('каліпером', generate_search_link('каліпер'))}."
+        ),
+    )
+    await add_messages_to_delete(state=state, message_ids=[sent_photo.message_id])
 
 
 @router.message(CalcCaloriesSurvey.fat_pct, ~F.text.regexp(float_regexp))
