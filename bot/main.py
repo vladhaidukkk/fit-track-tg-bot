@@ -4,7 +4,6 @@ import sentry_sdk
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.utils.chat_action import ChatActionMiddleware
 
 from bot.config import settings
 from bot.handlers import router
@@ -25,7 +24,6 @@ if settings.sentry.dsn:
 async def main() -> None:
     dp = Dispatcher()
     dp.update.outer_middleware(AuthMiddleware())
-    dp.message.middleware(ChatActionMiddleware())
     dp.include_router(router)
 
     bot = Bot(token=settings.bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))

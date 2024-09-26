@@ -3,6 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils import markdown as md
+from aiogram.utils.chat_action import ChatActionSender
 
 from bot.core.enums import ActivityRate
 from bot.core.nutrition_calculator import calc_nutritional_profile
@@ -134,19 +135,22 @@ async def calc_calories_survey_fat_pct_handler(message: Message, state: FSMConte
 
 @router.callback_query(CalcCaloriesSurvey.fat_pct, F.data == FAT_PCT_HELP_DATA)
 async def calc_calories_survey_fat_pct_help_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
-    data = await state.get_data()
-    fat_pct_helper_path = f"assets/{data['biological_gender']}-fat-pct-helper.jpg"
+    async with ChatActionSender.upload_photo(bot=callback_query.bot, chat_id=callback_query.message.chat.id):
+        data = await state.get_data()
+        fat_pct_helper_path = f"assets/{data['biological_gender']}-fat-pct-helper.jpg"
 
-    await callback_query.answer()
-    await callback_query.message.edit_text("🍔 Визначте ваш відсоток жиру, поглянувши на фото, та вкажіть значення:")
-    sent_photo = await callback_query.message.answer_photo(
-        photo=FSInputFile(path=fat_pct_helper_path),
-        caption=md.html_decoration.italic(
-            f"Якщо вам важко визначити відсоток жиру за фото, ви можете скористатися "
-            f"{md.hlink('каліпером', generate_search_link('каліпер'))}."
-        ),
-    )
-    await add_messages_to_delete(state=state, message_ids=[sent_photo.message_id])
+        await callback_query.answer()
+        await callback_query.message.edit_text(
+            "🍔 Визначте ваш відсоток жиру, поглянувши на фото, та вкажіть значення:"
+        )
+        sent_photo = await callback_query.message.answer_photo(
+            photo=FSInputFile(path=fat_pct_helper_path),
+            caption=md.html_decoration.italic(
+                f"Якщо вам важко визначити відсоток жиру за фото, ви можете скористатися "
+                f"{md.hlink('каліпером', generate_search_link('каліпер'))}."
+            ),
+        )
+        await add_messages_to_delete(state=state, message_ids=[sent_photo.message_id])
 
 
 @router.message(CalcCaloriesSurvey.fat_pct, ~F.text.regexp(float_regexp))
@@ -235,15 +239,16 @@ async def calc_calories_survey_amr_ai_help_handler(callback_query: CallbackQuery
 
 @router.message(CalcCaloriesSurvey.amr_ai_query)
 async def calc_calories_survey_amr_ai_query_handler(message: Message, state: FSMContext) -> None:
-    await state.set_state(CalcCaloriesSurvey.amr)
+    async with ChatActionSender.typing(bot=message.bot, chat_id=message.chat.id):
+        await state.set_state(CalcCaloriesSurvey.amr)
 
-    query = (
-        "Будь ласка, визначте коефіцієнт активності (1.2, 1.375, 1.55, 1.725 або 1.9) для наступного опису: "
-        f'"{message.text}".'
-    )
-    ai_response = await generate_text(query=query)
-    sent_message = await message.answer(md.text(md.hbold("🤖 Відповідь AI:"), f'"{ai_response.rstrip(".")}".'))
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+        query = (
+            "Будь ласка, визначте коефіцієнт активності (1.2, 1.375, 1.55, 1.725 або 1.9) для наступного опису: "
+            f'"{message.text}".'
+        )
+        ai_response = await generate_text(query=query)
+        sent_message = await message.answer(md.text(md.hbold("🤖 Відповідь AI:"), f'"{ai_response.rstrip(".")}".'))
+        await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
 @router.message(CalcCaloriesSurvey.amr)
