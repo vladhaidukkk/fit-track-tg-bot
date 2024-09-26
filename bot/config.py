@@ -42,7 +42,7 @@ class AlchemySettings(BaseModel):
 class OpenAISettings(BaseModel):
     enabled: bool = True
     api_key: str
-    model: ChatModel
+    model: ChatModel = "gpt-3.5-turbo"
     stub_responses: bool = False
 
 
