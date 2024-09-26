@@ -3,9 +3,9 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from bot.core.enums import WeightTarget
 
 WEIGHT_TARGET_TO_TEXT = {
-    WeightTarget.LOSE: "⬇️ Схуднути",
-    WeightTarget.MAINTAIN: "⏹️ Підтримувати вагу",
-    WeightTarget.GAIN: "⬆️ Набрати вагу",
+    WeightTarget.LOSE: "🏃 Схуднути",
+    WeightTarget.MAINTAIN: "⚖️ Підтримувати вагу",
+    WeightTarget.GAIN: "💪 Набрати вагу",
 }
 
 WEIGHT_TARGET_TO_DATA = {
