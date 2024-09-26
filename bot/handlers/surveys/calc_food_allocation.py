@@ -4,6 +4,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 
 from bot.core.food_allocation_calculator import calc_food_allocation
+from bot.filters import PrivilegedUserFilter
 from bot.keyboards.root import RootKeyboardText
 from bot.regexps import float_regexp
 from bot.utils.format_utils import format_number
@@ -12,6 +13,7 @@ from bot.utils.parse_utils import parse_float
 from bot.utils.survey_utils import add_messages_to_delete, clear_messages
 
 router = Router(name=__name__)
+router.message.filter(PrivilegedUserFilter())
 
 
 class CalcFoodAllocationSurvey(StatesGroup):
