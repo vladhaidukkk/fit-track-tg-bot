@@ -51,7 +51,9 @@ async def calc_food_allocation_button_handler(message: Message, state: FSMContex
 async def calc_food_allocation_survey_cancel_button_handler(message: Message, state: FSMContext) -> None:
     await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state, subset=slice(1, None))
     await state.clear()
-    await message.reply("Розрахунок розподілу їжі скасовано.", reply_markup=root_keyboard(user_id=message.from_user.id))
+    await message.answer(
+        "🚫 Розрахунок розподілу їжі скасовано.", reply_markup=root_keyboard(user_id=message.from_user.id)
+    )
 
 
 @router.message(CalcFoodAllocationSurvey.first_dry_mass, F.text.regexp(float_regexp))
@@ -204,8 +206,10 @@ async def calc_food_allocation_survey_undo_second_dry_mass_handler(message: Mess
 @router.message(CalcFoodAllocationSurvey.second_dry_mass)
 @router.message(CalcFoodAllocationSurvey.total_ready_mass)
 async def calc_food_allocation_survey_invalid_mass_handler(message: Message, state: FSMContext) -> None:
-    state_name = await state.get_state()
+    active_state = await state.get_state()
     sent_message = await message.answer("⚠️ Вага повинна бути числом. Введіть її ще раз:")
     await add_messages_to_delete(
-        state=state, messages_group_name=state_name, message_ids=[message.message_id, sent_message.message_id]
+        state=state,
+        messages_group_name=active_state,
+        message_ids=[message.message_id, sent_message.message_id],
     )

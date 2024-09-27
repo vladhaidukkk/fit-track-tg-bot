@@ -42,8 +42,12 @@ async def start_command_handler(message: Message, state: FSMContext, user: UserM
 @primary_router.message(Command("cancel"))
 async def cancel_command_handler(message: Message, state: FSMContext) -> None:
     await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state, subset=slice(1, None))
+
+    active_state = await state.get_state()
     await state.clear()
-    await message.reply("🚫 Поточну дію скасовано.", reply_markup=root_keyboard(user_id=message.from_user.id))
+
+    text = "🚫 Активну дію скасовано." if active_state else "ℹ️ Ніяка дія не активована."
+    await message.answer(text, reply_markup=root_keyboard(user_id=message.from_user.id))
 
 
 secondary_router = Router(name=f"{__name__}:secondary")

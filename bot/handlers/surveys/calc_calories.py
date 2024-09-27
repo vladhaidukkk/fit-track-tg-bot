@@ -66,7 +66,9 @@ async def calc_calories_button_handler(message: Message, state: FSMContext) -> N
 async def calc_calories_survey_cancel_button_handler(message: Message, state: FSMContext) -> None:
     await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state, subset=slice(1, None))
     await state.clear()
-    await message.reply("Розрахунок калорійності скасовано.", reply_markup=root_keyboard(user_id=message.from_user.id))
+    await message.answer(
+        "🚫 Розрахунок калорійності скасовано.", reply_markup=root_keyboard(user_id=message.from_user.id)
+    )
 
 
 @router.callback_query(CalcCaloriesSurvey.biological_gender, F.data.in_(BIOLOGICAL_GENDER_TO_DATA.values()))
