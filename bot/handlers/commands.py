@@ -23,14 +23,20 @@ async def start_command_handler(message: Message, state: FSMContext, user: UserM
     if user and user.username != message.from_user.username:
         await update_user(id_=message.from_user.id, username=message.from_user.username)
 
-    await message.answer(
-        md.text(
+    text = (
+        "З поверненням! Готові до нових вершин? 💪"
+        if user
+        else md.text(
             f"Вас вітає {md.hbold(settings.bot.name)}! 👋",
-            "Давайте розпочнемо вашу фітнес-подорож разом.",
-            sep="\n",
-        ),
-        reply_markup=root_keyboard(user_id=message.from_user.id),
+            (
+                f"Я роблю підрахунок калорій {md.hbold('простим')} і {md.hbold('точним')}, використовуючи "
+                f"{md.hbold('найновіші рекомендації')}. Вам більше не потрібно робити це вручну."
+            ),
+            "Почнімо досягати нових вершин у вашій фітнес-подорожі разом! 💪",
+            sep="\n\n",
+        )
     )
+    await message.answer(text, reply_markup=root_keyboard(user_id=message.from_user.id))
 
 
 @primary_router.message(Command("cancel"))
