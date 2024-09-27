@@ -74,6 +74,18 @@ async def calc_food_allocation_survey_first_dry_mass_handler(message: Message, s
     )
 
 
+@router.message(CalcFoodAllocationSurvey.first_dry_mass, F.text == SurveyKeyboardText.UNDO_PREV_STEP)
+async def calc_food_allocation_survey_undo_survey_handler(message: Message, state: FSMContext) -> None:
+    sent_message = await message.answer(
+        "⚠️ Перший етап не може бути відмінено. Якщо ви хочете скасувати дію, натисніть відповідну кнопку."
+    )
+    await add_messages_to_delete(
+        state=state,
+        messages_group_name=CalcFoodAllocationSurvey.first_dry_mass.state,
+        message_ids=[message.message_id, sent_message.message_id],
+    )
+
+
 @router.message(CalcFoodAllocationSurvey.second_dry_mass, F.text.regexp(float_regexp))
 async def calc_food_allocation_survey_second_dry_mass_handler(message: Message, state: FSMContext) -> None:
     await add_messages_to_delete(
