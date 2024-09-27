@@ -5,7 +5,8 @@ from aiogram.types import Message
 
 from bot.core.food_allocation_calculator import calc_food_allocation
 from bot.filters import PrivilegedUserFilter
-from bot.keyboards.root import RootKeyboardText
+from bot.keyboards.reply.root import RootKeyboardText, root_keyboard
+from bot.keyboards.reply.survey import survey_keyboard
 from bot.regexps import float_regexp
 from bot.utils.format_utils import format_number
 from bot.utils.message_utils import build_detailed_message
@@ -25,8 +26,14 @@ class CalcFoodAllocationSurvey(StatesGroup):
 @router.message(F.text == RootKeyboardText.CALC_FOOD_ALLOCATION)
 async def calc_food_allocation_button_handler(message: Message, state: FSMContext) -> None:
     await state.set_state(CalcFoodAllocationSurvey.first_dry_mass)
-    sent_message = await message.answer("1️⃣ Вкажіть суху вагу продукту для першої особи (в грамах):")
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    start_message = await message.answer(
+        "🍽️ Розрахунок розподілу їжі розпочато. Покроково вказуйте вхідні дані для отримання результату.",
+        reply_markup=survey_keyboard(),
+    )
+    first_dry_mass_message = await message.answer("1️⃣ Вкажіть суху вагу продукту для першої особи (в грамах):")
+    await add_messages_to_delete(
+        state=state, message_ids=[message.message_id, start_message.message_id, first_dry_mass_message.message_id]
+    )
 
 
 @router.message(CalcFoodAllocationSurvey.first_dry_mass, F.text.regexp(float_regexp))
@@ -72,7 +79,8 @@ async def calc_food_allocation_survey_total_ready_mass_handler(message: Message,
             ],
             bold_detail_name=False,
             bold_detail_value=True,
-        )
+        ),
+        reply_markup=root_keyboard(user_id=message.from_user.id),
     )
 
 

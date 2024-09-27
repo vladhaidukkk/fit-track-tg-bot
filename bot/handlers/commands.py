@@ -1,4 +1,4 @@
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -7,7 +7,8 @@ from aiogram.utils import markdown as md
 from bot.config import settings
 from bot.db.models import UserModel
 from bot.db.queries import add_user, update_user
-from bot.keyboards.root import root_keyboard
+from bot.keyboards.reply.root import root_keyboard
+from bot.keyboards.reply.survey import SurveyKeyboardText
 from bot.utils.survey_utils import clear_messages
 
 primary_router = Router(name=f"{__name__}:primary")
@@ -34,9 +35,11 @@ async def start_command_handler(message: Message, state: FSMContext, user: UserM
 
 
 @primary_router.message(Command("cancel"))
+@primary_router.message(F.text == SurveyKeyboardText.CANCEL)
 async def cancel_command_handler(message: Message, state: FSMContext) -> None:
     await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state, subset=slice(1, None))
     await state.clear()
+    await message.reply("Поточну дію успішно скасовано.", reply_markup=root_keyboard(user_id=message.from_user.id))
 
 
 secondary_router = Router(name=f"{__name__}:secondary")

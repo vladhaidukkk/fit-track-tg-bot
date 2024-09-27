@@ -7,20 +7,21 @@ from aiogram.utils.chat_action import ChatActionSender
 
 from bot.core.enums import ActivityRate
 from bot.core.nutrition_calculator import calc_nutritional_profile
-from bot.keyboards.activity_rate import (
+from bot.keyboards.inline.activity_rate import (
     ACTIVITY_RATE_AI_HELP_DATA,
     ACTIVITY_RATE_HELP_DATA,
     ACTIVITY_RATE_TO_DATA,
     activity_rate_keyboard,
 )
-from bot.keyboards.biological_gender import (
+from bot.keyboards.inline.biological_gender import (
     BIOLOGICAL_GENDER_TO_DATA,
     BIOLOGICAL_GENDER_TO_TEXT,
     biological_gender_keyboard,
 )
-from bot.keyboards.fat_pct import FAT_PCT_HELP_DATA, fat_pct_keyboard
-from bot.keyboards.root import RootKeyboardText
-from bot.keyboards.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
+from bot.keyboards.inline.fat_pct import FAT_PCT_HELP_DATA, fat_pct_keyboard
+from bot.keyboards.inline.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
+from bot.keyboards.reply.root import RootKeyboardText, root_keyboard
+from bot.keyboards.reply.survey import survey_keyboard
 from bot.regexps import float_regexp, int_regexp
 from bot.utils.ai_utils import generate_text
 from bot.utils.dict_utils import get_key_by_value
@@ -48,10 +49,16 @@ class CalcCaloriesSurvey(StatesGroup):
 @router.message(F.text == RootKeyboardText.CALC_CALORIES)
 async def calc_calories_button_handler(message: Message, state: FSMContext) -> None:
     await state.set_state(CalcCaloriesSurvey.biological_gender)
-    sent_message = await message.answer(
+    start_message = await message.answer(
+        "🥗 Розрахунок калорійності розпочато. Покроково вказуйте вхідні параметри для отримання результату.",
+        reply_markup=survey_keyboard(),
+    )
+    biological_gender_message = await message.answer(
         "🚻 Оберіть вашу біологічну стать, натиснувши кнопку.", reply_markup=biological_gender_keyboard()
     )
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await add_messages_to_delete(
+        state=state, message_ids=[message.message_id, start_message.message_id, biological_gender_message.message_id]
+    )
 
 
 @router.callback_query(CalcCaloriesSurvey.biological_gender, F.data.in_(BIOLOGICAL_GENDER_TO_DATA.values()))
@@ -273,7 +280,7 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
     await callback_query.answer()
     await callback_query.message.edit_text(
         build_detailed_message(
-            title="📋 Вхідні дані",
+            title="📋 Вхідні параметри",
             details=[
                 ("Біологічна стать", get_tail(BIOLOGICAL_GENDER_TO_TEXT[data["biological_gender"]])),
                 ("Вік", format_age(data["age"])),
@@ -326,7 +333,8 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
             ),
             bold_detail_name=False,
             bold_detail_value=True,
-        )
+        ),
+        reply_markup=root_keyboard(user_id=callback_query.from_user.id),
     )
     # TODO: add a button to show detailed info (lbm, bmr, tef...).
 
