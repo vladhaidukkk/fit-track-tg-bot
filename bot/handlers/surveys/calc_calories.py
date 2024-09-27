@@ -1,4 +1,5 @@
 from aiogram import F, Router
+from aiogram.filters import or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, FSInputFile, Message
@@ -21,7 +22,7 @@ from bot.keyboards.inline.biological_gender import (
 from bot.keyboards.inline.fat_pct import FAT_PCT_HELP_DATA, fat_pct_keyboard
 from bot.keyboards.inline.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT, weight_target_keyboard
 from bot.keyboards.reply.root import RootKeyboardText, root_keyboard
-from bot.keyboards.reply.survey import survey_keyboard
+from bot.keyboards.reply.survey import SurveyKeyboardText, survey_keyboard
 from bot.regexps import float_regexp, int_regexp
 from bot.utils.ai_utils import generate_text
 from bot.utils.dict_utils import get_key_by_value
@@ -59,6 +60,13 @@ async def calc_calories_button_handler(message: Message, state: FSMContext) -> N
     await add_messages_to_delete(
         state=state, message_ids=[message.message_id, start_message.message_id, biological_gender_message.message_id]
     )
+
+
+@router.message(or_f(*CalcCaloriesSurvey.__states__), F.text == SurveyKeyboardText.CANCEL)
+async def calc_calories_survey_cancel_button_handler(message: Message, state: FSMContext) -> None:
+    await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state, subset=slice(1, None))
+    await state.clear()
+    await message.reply("Розрахунок калорійності скасовано.", reply_markup=root_keyboard(user_id=message.from_user.id))
 
 
 @router.callback_query(CalcCaloriesSurvey.biological_gender, F.data.in_(BIOLOGICAL_GENDER_TO_DATA.values()))
