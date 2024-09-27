@@ -35,7 +35,7 @@ async def start_command_handler(message: Message, state: FSMContext, user: UserM
 
 @primary_router.message(Command("cancel"))
 async def cancel_command_handler(message: Message, state: FSMContext) -> None:
-    await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state)
+    await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state, subset=slice(1, None))
     await state.clear()
 
 

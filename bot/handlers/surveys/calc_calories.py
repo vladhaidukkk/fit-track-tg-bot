@@ -51,7 +51,7 @@ async def calc_calories_button_handler(message: Message, state: FSMContext) -> N
     sent_message = await message.answer(
         "🚻 Оберіть вашу біологічну стать, натиснувши кнопку.", reply_markup=biological_gender_keyboard()
     )
-    await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
+    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
 @router.callback_query(CalcCaloriesSurvey.biological_gender, F.data.in_(BIOLOGICAL_GENDER_TO_DATA.values()))
@@ -162,7 +162,9 @@ async def calc_calories_survey_invalid_fat_pct_handler(message: Message, state: 
 @router.callback_query(CalcCaloriesSurvey.amr, F.data.in_(ACTIVITY_RATE_TO_DATA.values()))
 async def calc_calories_survey_amr_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
     await add_messages_to_delete(state=state, message_ids=[callback_query.message.message_id])
-    await clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, state=state)
+    await clear_messages(
+        bot=callback_query.bot, chat_id=callback_query.message.chat.id, state=state, subset=slice(1, None)
+    )
 
     amr = get_key_by_value(ACTIVITY_RATE_TO_DATA, callback_query.data)
     await state.update_data(amr=amr)
@@ -259,7 +261,9 @@ async def calc_calories_survey_invalid_amr_handler(message: Message, state: FSMC
 
 @router.callback_query(CalcCaloriesSurvey.weight_target, F.data.in_(WEIGHT_TARGET_TO_DATA.values()))
 async def calc_calories_survey_weight_target_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
-    await clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, state=state)
+    await clear_messages(
+        bot=callback_query.bot, chat_id=callback_query.message.chat.id, state=state, subset=slice(1, None)
+    )
 
     weight_target = get_key_by_value(WEIGHT_TARGET_TO_DATA, callback_query.data)
     await state.update_data(weight_target=weight_target)

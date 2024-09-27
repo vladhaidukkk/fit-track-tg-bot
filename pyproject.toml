@@ -47,5 +47,8 @@ ignore = [
 "__init__.py" = ["F401"]
 "tests/**.py" = []
 
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["slice"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
