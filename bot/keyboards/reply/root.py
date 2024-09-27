@@ -30,5 +30,5 @@ def root_keyboard(user_id: int | None = None) -> ReplyKeyboardMarkup:
             [KeyboardButton(text=RootKeyboardText.LEAVE_FEEDBACK)],
         ],
         resize_keyboard=True,
-        input_field_placeholder=None,
+        input_field_placeholder="Виберіть дію...",
     )

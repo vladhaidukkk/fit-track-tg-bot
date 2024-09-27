@@ -8,8 +8,4 @@ class SurveyKeyboardText(StrEnum):
 
 
 def survey_keyboard() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=SurveyKeyboardText.CANCEL)]],
-        resize_keyboard=True,
-        input_field_placeholder=None,
-    )
+    return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=SurveyKeyboardText.CANCEL)]], resize_keyboard=True)
