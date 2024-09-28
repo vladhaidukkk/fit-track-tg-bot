@@ -31,20 +31,16 @@ TOTAL_READY_MASS_PROMPT = "⚖️ Вкажіть загальну вагу пр�
 
 @router.message(F.text == RootKeyboardText.CALC_FOOD_ALLOCATION)
 async def calc_food_allocation_button_handler(message: Message, state: FSMContext) -> None:
-    await state.set_state(CalcFoodAllocationSurvey.first_dry_mass)
-
     start_message = await message.answer(
         "🍽️ Розрахунок розподілу їжі розпочато. Покроково вказуйте вхідні дані для отримання результату.",
         reply_markup=survey_keyboard(),
     )
     await add_messages_to_delete(state=state, message_ids=[message.message_id, start_message.message_id])
 
-    first_dry_mass_message = await message.answer(FIRST_DRY_MASS_PROMPT)
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.first_dry_mass.state,
-        message_ids=[first_dry_mass_message.message_id],
-    )
+    await state.set_state(CalcFoodAllocationSurvey.first_dry_mass)
+
+    prompt_message = await message.answer(FIRST_DRY_MASS_PROMPT)
+    await add_messages_to_delete(state=state, message_ids=[prompt_message.message_id])
 
 
 @router.message(or_f(*CalcFoodAllocationSurvey.__states__), F.text == SurveyKeyboardText.CANCEL)
@@ -58,22 +54,14 @@ async def calc_food_allocation_survey_cancel_button_handler(message: Message, st
 
 @router.message(CalcFoodAllocationSurvey.first_dry_mass, F.text.regexp(float_regexp))
 async def calc_food_allocation_survey_first_dry_mass_handler(message: Message, state: FSMContext) -> None:
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.first_dry_mass.state,
-        message_ids=[message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[message.message_id])
 
     first_dry_mass = parse_float(message.text)
     await state.update_data(first_dry_mass=first_dry_mass)
     await state.set_state(CalcFoodAllocationSurvey.second_dry_mass)
 
     sent_message = await message.answer(SECOND_DRY_MASS_PROMPT)
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.second_dry_mass.state,
-        message_ids=[sent_message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
 
 
 @router.message(CalcFoodAllocationSurvey.first_dry_mass, F.text == SurveyKeyboardText.UNDO_PREV_STEP)
@@ -81,31 +69,19 @@ async def calc_food_allocation_survey_undo_survey_handler(message: Message, stat
     sent_message = await message.answer(
         "⚠️ Перший етап не може бути відмінено. Якщо ви хочете скасувати дію, натисніть відповідну кнопку."
     )
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.first_dry_mass.state,
-        message_ids=[message.message_id, sent_message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
 
 
 @router.message(CalcFoodAllocationSurvey.second_dry_mass, F.text.regexp(float_regexp))
 async def calc_food_allocation_survey_second_dry_mass_handler(message: Message, state: FSMContext) -> None:
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.second_dry_mass.state,
-        message_ids=[message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[message.message_id])
 
     second_dry_mass = parse_float(message.text)
     await state.update_data(second_dry_mass=second_dry_mass)
     await state.set_state(CalcFoodAllocationSurvey.total_ready_mass)
 
     sent_message = await message.answer(TOTAL_READY_MASS_PROMPT)
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.total_ready_mass.state,
-        message_ids=[sent_message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
 
 
 @router.message(CalcFoodAllocationSurvey.second_dry_mass, F.text == SurveyKeyboardText.UNDO_PREV_STEP)
@@ -114,38 +90,26 @@ async def calc_food_allocation_survey_undo_first_dry_mass_handler(message: Messa
         bot=message.bot,
         chat_id=message.chat.id,
         state=state,
-        messages_group_name=CalcFoodAllocationSurvey.first_dry_mass.state,
+        group_name=CalcFoodAllocationSurvey.first_dry_mass.state,
     )
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.second_dry_mass.state,
-        message_ids=[message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[message.message_id])
     await clear_messages(
         bot=message.bot,
         chat_id=message.chat.id,
         state=state,
-        messages_group_name=CalcFoodAllocationSurvey.second_dry_mass.state,
+        group_name=CalcFoodAllocationSurvey.second_dry_mass.state,
     )
 
     await state.update_data(first_dry_mass=None)
     await state.set_state(CalcFoodAllocationSurvey.first_dry_mass)
 
     sent_message = await message.answer(FIRST_DRY_MASS_PROMPT)
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.first_dry_mass.state,
-        message_ids=[sent_message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
 
 
 @router.message(CalcFoodAllocationSurvey.total_ready_mass, F.text.regexp(float_regexp))
 async def calc_food_allocation_survey_total_ready_mass_handler(message: Message, state: FSMContext) -> None:
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.total_ready_mass.state,
-        message_ids=[message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[message.message_id])
     await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state, subset=slice(1, None))
 
     total_ready_mass = parse_float(message.text)
@@ -177,39 +141,26 @@ async def calc_food_allocation_survey_undo_second_dry_mass_handler(message: Mess
         bot=message.bot,
         chat_id=message.chat.id,
         state=state,
-        messages_group_name=CalcFoodAllocationSurvey.second_dry_mass.state,
+        group_name=CalcFoodAllocationSurvey.second_dry_mass.state,
     )
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.total_ready_mass.state,
-        message_ids=[message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[message.message_id])
     await clear_messages(
         bot=message.bot,
         chat_id=message.chat.id,
         state=state,
-        messages_group_name=CalcFoodAllocationSurvey.total_ready_mass.state,
+        group_name=CalcFoodAllocationSurvey.total_ready_mass.state,
     )
 
     await state.update_data(second_dry_mass=None)
     await state.set_state(CalcFoodAllocationSurvey.second_dry_mass)
 
     sent_message = await message.answer(SECOND_DRY_MASS_PROMPT)
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=CalcFoodAllocationSurvey.second_dry_mass.state,
-        message_ids=[sent_message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
 
 
 @router.message(CalcFoodAllocationSurvey.first_dry_mass)
 @router.message(CalcFoodAllocationSurvey.second_dry_mass)
 @router.message(CalcFoodAllocationSurvey.total_ready_mass)
 async def calc_food_allocation_survey_invalid_mass_handler(message: Message, state: FSMContext) -> None:
-    active_state = await state.get_state()
     sent_message = await message.answer("⚠️ Вага повинна бути числом. Введіть її ще раз:")
-    await add_messages_to_delete(
-        state=state,
-        messages_group_name=active_state,
-        message_ids=[message.message_id, sent_message.message_id],
-    )
+    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
