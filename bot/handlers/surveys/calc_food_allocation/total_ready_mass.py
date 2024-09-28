@@ -46,16 +46,11 @@ async def total_ready_mass_handler(message: Message, survey: SurveyContext) -> N
 
 @state_router.message(F.text == SurveyKeyboardText.UNDO_PREV_STEP)
 async def undo_total_ready_mass_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.clear_messages(
-        bot=message.bot,
-        chat_id=message.chat.id,
-        group_name=CalcFoodAllocationStates.second_dry_mass.state,
-    )
     await survey.add_messages_to_delete(message.message_id)
     await survey.clear_messages(
         bot=message.bot,
         chat_id=message.chat.id,
-        group_name=CalcFoodAllocationStates.total_ready_mass.state,
+        group_names=[CalcFoodAllocationStates.second_dry_mass.state, CalcFoodAllocationStates.total_ready_mass.state],
     )
 
     await survey.state.update_data(second_dry_mass=None)

@@ -21,25 +21,21 @@ class SurveyContext:
         await self.state.update_data(messages_to_delete=messages_to_delete)
 
     async def clear_messages(
-        self, *, bot: Bot, chat_id: int | str, group_name: str | None = None, subset: slice = slice(None)
+        self, *, bot: Bot, chat_id: int | str, group_names: list[str] | None = None, subset: slice = slice(None)
     ) -> None:
         data = await self.state.get_data()
         messages_to_delete = data.get("messages_to_delete", defaultdict(list))
 
-        if group_name:
-            message_ids_to_delete = messages_to_delete[group_name][subset]
-            # We delete messages by replacing the sliced content with an empty list, which mutates the original list.
-            messages_to_delete[group_name][subset] = []
-        else:
-            all_message_ids = [
-                message_id for group_message_ids in messages_to_delete.values() for message_id in group_message_ids
+        group_names = group_names or list(messages_to_delete)
+        combined_message_ids = [
+            message_id for group_name in group_names for message_id in messages_to_delete[group_name]
+        ]
+        message_ids_to_delete = combined_message_ids[subset]
+        for group_name in group_names:
+            # We refer to group messages directly in this case to mutate the original list.
+            messages_to_delete[group_name] = [
+                message_id for message_id in messages_to_delete[group_name] if message_id not in message_ids_to_delete
             ]
-            message_ids_to_delete = all_message_ids[subset]
-            for group_name_key, group_message_ids in messages_to_delete.items():
-                # We refer to group messages directly in this case to mutate the original list.
-                messages_to_delete[group_name_key] = [
-                    message_id for message_id in group_message_ids if message_id not in message_ids_to_delete
-                ]
 
         if message_ids_to_delete:
             await bot.delete_messages(chat_id=chat_id, message_ids=message_ids_to_delete)
