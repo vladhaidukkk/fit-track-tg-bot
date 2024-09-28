@@ -1,6 +1,5 @@
 from aiogram import F, Router
 from aiogram.filters import or_f
-from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils import markdown as md
@@ -24,6 +23,7 @@ from bot.keyboards.inline.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TAR
 from bot.keyboards.reply.root import RootKeyboardText, root_keyboard
 from bot.keyboards.reply.survey import SurveyKeyboardText, survey_keyboard
 from bot.regexps import float_regexp, int_regexp
+from bot.survey.context import SurveyContext
 from bot.utils.ai_utils import generate_text
 from bot.utils.dict_utils import get_key_by_value
 from bot.utils.format_utils import format_age, format_number, format_numbers_range
@@ -31,7 +31,6 @@ from bot.utils.google_utils import generate_search_link
 from bot.utils.message_utils import build_detailed_message
 from bot.utils.parse_utils import parse_float
 from bot.utils.string_utils import get_tail
-from bot.utils.survey_utils import add_messages_to_delete, clear_messages
 
 router = Router(name=__name__)
 
@@ -48,8 +47,8 @@ class CalcCaloriesSurvey(StatesGroup):
 
 
 @router.message(F.text == RootKeyboardText.CALC_CALORIES)
-async def calc_calories_button_handler(message: Message, state: FSMContext) -> None:
-    await state.set_state(CalcCaloriesSurvey.biological_gender)
+async def calc_calories_button_handler(message: Message, survey: SurveyContext) -> None:
+    await survey.state.set_state(CalcCaloriesSurvey.biological_gender)
     start_message = await message.answer(
         "🥗 Розрахунок калорійності розпочато. Покроково вказуйте вхідні параметри для отримання результату.",
         reply_markup=survey_keyboard(),
@@ -57,103 +56,103 @@ async def calc_calories_button_handler(message: Message, state: FSMContext) -> N
     biological_gender_message = await message.answer(
         "🚻 Оберіть вашу біологічну стать, натиснувши кнопку.", reply_markup=biological_gender_keyboard()
     )
-    await add_messages_to_delete(
-        state=state, message_ids=[message.message_id, start_message.message_id, biological_gender_message.message_id]
+    await survey.add_messages_to_delete(
+        message.message_id, start_message.message_id, biological_gender_message.message_id
     )
 
 
 @router.message(or_f(*CalcCaloriesSurvey.__states__), F.text == SurveyKeyboardText.CANCEL)
-async def calc_calories_survey_cancel_button_handler(message: Message, state: FSMContext) -> None:
-    await clear_messages(bot=message.bot, chat_id=message.chat.id, state=state, subset=slice(1, None))
-    await state.clear()
+async def calc_calories_survey_cancel_button_handler(message: Message, survey: SurveyContext) -> None:
+    await survey.clear_messages(bot=message.bot, chat_id=message.chat.id, subset=slice(1, None))
+    await survey.state.clear()
     await message.answer(
         "🚫 Розрахунок калорійності скасовано.", reply_markup=root_keyboard(user_id=message.from_user.id)
     )
 
 
 @router.callback_query(CalcCaloriesSurvey.biological_gender, F.data.in_(BIOLOGICAL_GENDER_TO_DATA.values()))
-async def calc_calories_survey_biological_gender_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+async def calc_calories_survey_biological_gender_handler(callback_query: CallbackQuery, survey: SurveyContext) -> None:
     biological_gender = get_key_by_value(BIOLOGICAL_GENDER_TO_DATA, callback_query.data)
-    await state.update_data(biological_gender=biological_gender)
-    await state.set_state(CalcCaloriesSurvey.age)
+    await survey.state.update_data(biological_gender=biological_gender)
+    await survey.state.set_state(CalcCaloriesSurvey.age)
 
     await callback_query.answer()
     icon, output = BIOLOGICAL_GENDER_TO_TEXT[biological_gender].split(maxsplit=1)
     await callback_query.message.edit_text(f"{icon} Ваша біологічна стать: {md.hbold(output)}")
     sent_message = await callback_query.message.answer("📅 Вкажіть ваш вік:")
-    await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
+    await survey.add_messages_to_delete(sent_message.message_id)
 
 
 @router.message(CalcCaloriesSurvey.biological_gender)
-async def calc_calories_survey_unknown_biological_gender_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_unknown_biological_gender_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Оберіть біологічну стать, натиснувши кнопку під повідомленням.")
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.message(CalcCaloriesSurvey.age, F.text.regexp(int_regexp))
-async def calc_calories_survey_age_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_age_handler(message: Message, survey: SurveyContext) -> None:
     age = int(message.text)
-    await state.update_data(age=age)
-    await state.set_state(CalcCaloriesSurvey.height)
+    await survey.state.update_data(age=age)
+    await survey.state.set_state(CalcCaloriesSurvey.height)
 
     sent_message = await message.answer("📏 Вкажіть ваш зріст (в сантиметрах):")
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.message(CalcCaloriesSurvey.age, ~F.text.regexp(int_regexp))
-async def calc_calories_survey_invalid_age_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_invalid_age_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Вік повинен бути цілим числом. Введіть його ще раз:")
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.message(CalcCaloriesSurvey.height, F.text.regexp(float_regexp))
-async def calc_calories_survey_height_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_height_handler(message: Message, survey: SurveyContext) -> None:
     height = parse_float(message.text)
-    await state.update_data(height=height)
-    await state.set_state(CalcCaloriesSurvey.weight)
+    await survey.state.update_data(height=height)
+    await survey.state.set_state(CalcCaloriesSurvey.weight)
 
     sent_message = await message.answer("⚖️ Вкажіть вашу вагу (в кілограмах):")
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.message(CalcCaloriesSurvey.height, ~F.text.regexp(float_regexp))
-async def calc_calories_survey_invalid_height_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_invalid_height_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Зріст повинен бути числом. Введіть його ще раз:")
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.message(CalcCaloriesSurvey.weight, F.text.regexp(float_regexp))
-async def calc_calories_survey_weight_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_weight_handler(message: Message, survey: SurveyContext) -> None:
     weight = parse_float(message.text)
-    await state.update_data(weight=weight)
-    await state.set_state(CalcCaloriesSurvey.fat_pct)
+    await survey.state.update_data(weight=weight)
+    await survey.state.set_state(CalcCaloriesSurvey.fat_pct)
 
     sent_message = await message.answer("🍔 Вкажіть ваш відсоток жиру:", reply_markup=fat_pct_keyboard())
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.message(CalcCaloriesSurvey.weight, ~F.text.regexp(float_regexp))
-async def calc_calories_survey_invalid_weight_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_invalid_weight_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Вага повинна бути числом. Введіть її ще раз:")
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.message(CalcCaloriesSurvey.fat_pct, F.text.regexp(float_regexp))
-async def calc_calories_survey_fat_pct_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_fat_pct_handler(message: Message, survey: SurveyContext) -> None:
     fat_pct = parse_float(message.text)
-    await state.update_data(fat_pct=fat_pct)
-    await state.set_state(CalcCaloriesSurvey.amr)
+    await survey.state.update_data(fat_pct=fat_pct)
+    await survey.state.set_state(CalcCaloriesSurvey.amr)
 
     sent_message = await message.answer(
         "🏃 Оберіть ваш коефіцієнт активності, натиснувши кнопку.", reply_markup=activity_rate_keyboard(show_help=True)
     )
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.callback_query(CalcCaloriesSurvey.fat_pct, F.data == FAT_PCT_HELP_DATA)
-async def calc_calories_survey_fat_pct_help_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
+async def calc_calories_survey_fat_pct_help_handler(callback_query: CallbackQuery, survey: SurveyContext) -> None:
     async with ChatActionSender.upload_photo(bot=callback_query.bot, chat_id=callback_query.message.chat.id):
-        data = await state.get_data()
+        data = await survey.state.get_data()
         fat_pct_helper_path = f"assets/{data['biological_gender']}-fat-pct-helper.jpg"
 
         await callback_query.answer()
@@ -167,26 +166,24 @@ async def calc_calories_survey_fat_pct_help_handler(callback_query: CallbackQuer
                 f"{md.hlink('каліпером', generate_search_link('каліпер'))}."
             ),
         )
-        await add_messages_to_delete(state=state, message_ids=[sent_photo.message_id])
+        await survey.add_messages_to_delete(sent_photo.message_id)
 
 
 @router.message(CalcCaloriesSurvey.fat_pct, ~F.text.regexp(float_regexp))
-async def calc_calories_survey_invalid_fat_pct_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_invalid_fat_pct_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Відсоток жиру повинен бути числом. Введіть його ще раз:")
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.callback_query(CalcCaloriesSurvey.amr, F.data.in_(ACTIVITY_RATE_TO_DATA.values()))
-async def calc_calories_survey_amr_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
-    await add_messages_to_delete(state=state, message_ids=[callback_query.message.message_id])
-    await clear_messages(
-        bot=callback_query.bot, chat_id=callback_query.message.chat.id, state=state, subset=slice(1, None)
-    )
+async def calc_calories_survey_amr_handler(callback_query: CallbackQuery, survey: SurveyContext) -> None:
+    await survey.add_messages_to_delete(callback_query.message.message_id)
+    await survey.clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, subset=slice(1, None))
 
     amr = get_key_by_value(ACTIVITY_RATE_TO_DATA, callback_query.data)
-    await state.update_data(amr=amr)
-    data = await state.get_data()
-    await state.set_state(CalcCaloriesSurvey.weight_target)
+    await survey.state.update_data(amr=amr)
+    data = await survey.state.get_data()
+    await survey.state.set_state(CalcCaloriesSurvey.weight_target)
 
     await callback_query.message.answer(
         build_detailed_message(
@@ -245,21 +242,21 @@ async def calc_calories_survey_amr_help_handler(callback_query: CallbackQuery) -
 
 
 @router.callback_query(CalcCaloriesSurvey.amr, F.data == ACTIVITY_RATE_AI_HELP_DATA)
-async def calc_calories_survey_amr_ai_help_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
-    await state.set_state(CalcCaloriesSurvey.amr_ai_query)
+async def calc_calories_survey_amr_ai_help_handler(callback_query: CallbackQuery, survey: SurveyContext) -> None:
+    await survey.state.set_state(CalcCaloriesSurvey.amr_ai_query)
 
     await callback_query.answer()
     await callback_query.message.edit_reply_markup(reply_markup=activity_rate_keyboard())
     sent_message = await callback_query.message.answer(
         "🤖 Детально опишіть ваш спосіб життя, щоб AI міг допомогти вам визначити ваш коефіцієнт активності:"
     )
-    await add_messages_to_delete(state=state, message_ids=[sent_message.message_id])
+    await survey.add_messages_to_delete(sent_message.message_id)
 
 
 @router.message(CalcCaloriesSurvey.amr_ai_query)
-async def calc_calories_survey_amr_ai_query_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_amr_ai_query_handler(message: Message, survey: SurveyContext) -> None:
     async with ChatActionSender.typing(bot=message.bot, chat_id=message.chat.id):
-        await state.set_state(CalcCaloriesSurvey.amr)
+        await survey.state.set_state(CalcCaloriesSurvey.amr)
 
         query = (
             "Будь ласка, визначте коефіцієнт активності (1.2, 1.375, 1.55, 1.725 або 1.9) для наступного опису: "
@@ -267,25 +264,23 @@ async def calc_calories_survey_amr_ai_query_handler(message: Message, state: FSM
         )
         ai_response = await generate_text(query=query)
         sent_message = await message.answer(md.text(md.hbold("🤖 Відповідь AI:"), f'"{ai_response.rstrip(".")}".'))
-        await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+        await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.message(CalcCaloriesSurvey.amr)
-async def calc_calories_survey_invalid_amr_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_invalid_amr_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Оберіть коефіцієнт активності, натиснувши кнопку під повідомленням.")
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @router.callback_query(CalcCaloriesSurvey.weight_target, F.data.in_(WEIGHT_TARGET_TO_DATA.values()))
-async def calc_calories_survey_weight_target_handler(callback_query: CallbackQuery, state: FSMContext) -> None:
-    await clear_messages(
-        bot=callback_query.bot, chat_id=callback_query.message.chat.id, state=state, subset=slice(1, None)
-    )
+async def calc_calories_survey_weight_target_handler(callback_query: CallbackQuery, survey: SurveyContext) -> None:
+    await survey.clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, subset=slice(1, None))
 
     weight_target = get_key_by_value(WEIGHT_TARGET_TO_DATA, callback_query.data)
-    await state.update_data(weight_target=weight_target)
-    data = await state.get_data()
-    await state.clear()
+    await survey.state.update_data(weight_target=weight_target)
+    data = await survey.state.get_data()
+    await survey.state.clear()
 
     await callback_query.answer()
     await callback_query.message.edit_text(
@@ -350,6 +345,6 @@ async def calc_calories_survey_weight_target_handler(callback_query: CallbackQue
 
 
 @router.message(CalcCaloriesSurvey.weight_target)
-async def calc_calories_survey_unknown_weight_target_handler(message: Message, state: FSMContext) -> None:
+async def calc_calories_survey_unknown_weight_target_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Оберіть вашу мету, натиснувши кнопку під повідомленням.")
-    await add_messages_to_delete(state=state, message_ids=[message.message_id, sent_message.message_id])
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)

@@ -9,6 +9,7 @@ from bot.config import settings
 from bot.handlers import router
 from bot.logger import configure_logging
 from bot.middlewares.auth import AuthMiddleware
+from bot.survey.middleware import SurveyMiddleware
 
 if settings.sentry.dsn:
     sentry_sdk.init(
@@ -23,6 +24,7 @@ if settings.sentry.dsn:
 
 async def main() -> None:
     dp = Dispatcher()
+    dp.update.outer_middleware(SurveyMiddleware())
     dp.update.outer_middleware(AuthMiddleware())
     dp.include_router(router)
 
