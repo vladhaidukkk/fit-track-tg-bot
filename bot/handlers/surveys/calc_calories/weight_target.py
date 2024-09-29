@@ -26,10 +26,9 @@ async def weight_target_handler(callback_query: CallbackQuery, survey: SurveyCon
     await survey.clear_messages(
         bot=callback_query.bot,
         chat_id=callback_query.message.chat.id,
-        exclude_group_names=[CalcCaloriesStates.weight_target],
+        exclude_message_ids=[callback_query.message.message_id],
         subset=slice(1, None),
     )
-    await survey.clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, subset=slice(2, None))
 
     weight_target = get_key_by_value(WEIGHT_TARGET_TO_DATA, callback_query.data)
     await survey.state.update_data(weight_target=weight_target)
