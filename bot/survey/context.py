@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from aiogram import Bot
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State
 
 
 class SurveyContext:
@@ -49,3 +50,19 @@ class SurveyContext:
         if message_ids_to_delete:
             await bot.delete_messages(chat_id=chat_id, message_ids=message_ids_to_delete)
             await self.state.update_data(messages_to_delete=messages_to_delete)
+
+    async def go_to_prev_step(
+        self,
+        *,
+        bot: Bot,
+        chat_id: int | str,
+        prev_state: State,
+        clear_prev_state_messages: bool = False,
+    ) -> None:
+        group_names_to_clear = [await self.state.get_state()]
+        if clear_prev_state_messages:
+            group_names_to_clear.append(prev_state.state)
+        await self.clear_messages(bot=bot, chat_id=chat_id, group_names=group_names_to_clear)
+
+        await self.state.update_data({prev_state.state: None})
+        await self.state.set_state(prev_state)

@@ -38,12 +38,7 @@ async def amr_ai_query_handler(message: Message, survey: SurveyContext) -> None:
 @state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
 async def prev_step_amr_ai_query_handler(message: Message, survey: SurveyContext) -> None:
     await survey.add_messages_to_delete(message.message_id)
-    await survey.clear_messages(
-        bot=message.bot, chat_id=message.chat.id, group_names=[CalcCaloriesStates.amr_ai_query.state]
-    )
-
-    await survey.state.update_data(amr=None)
-    await survey.state.set_state(CalcCaloriesStates.amr)
+    await survey.go_to_prev_step(bot=message.bot, chat_id=message.chat.id, prev_state=CalcCaloriesStates.amr)
 
 
 @state_router.callback_query(F.data.in_(ACTIVITY_RATE_TO_DATA.values()))

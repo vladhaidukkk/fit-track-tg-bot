@@ -52,14 +52,12 @@ async def fat_pct_help_handler(callback_query: CallbackQuery, survey: SurveyCont
 @state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
 async def prev_step_fat_pct_handler(message: Message, survey: SurveyContext) -> None:
     await survey.add_messages_to_delete(message.message_id)
-    await survey.clear_messages(
+    await survey.go_to_prev_step(
         bot=message.bot,
         chat_id=message.chat.id,
-        group_names=[CalcCaloriesStates.weight.state, CalcCaloriesStates.fat_pct.state],
+        prev_state=CalcCaloriesStates.weight,
+        clear_prev_state_messages=True,
     )
-
-    await survey.state.update_data(weight=None)
-    await survey.state.set_state(CalcCaloriesStates.weight)
 
     sent_message = await message.answer(WEIGHT_PROMPT)
     await survey.add_messages_to_delete(sent_message.message_id)

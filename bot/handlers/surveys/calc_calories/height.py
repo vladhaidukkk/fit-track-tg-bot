@@ -27,14 +27,12 @@ async def height_handler(message: Message, survey: SurveyContext) -> None:
 @state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
 async def prev_step_height_handler(message: Message, survey: SurveyContext) -> None:
     await survey.add_messages_to_delete(message.message_id)
-    await survey.clear_messages(
+    await survey.go_to_prev_step(
         bot=message.bot,
         chat_id=message.chat.id,
-        group_names=[CalcCaloriesStates.age.state, CalcCaloriesStates.height.state],
+        prev_state=CalcCaloriesStates.age,
+        clear_prev_state_messages=True,
     )
-
-    await survey.state.update_data(age=None)
-    await survey.state.set_state(CalcCaloriesStates.age)
 
     sent_message = await message.answer(AGE_PROMPT)
     await survey.add_messages_to_delete(sent_message.message_id)

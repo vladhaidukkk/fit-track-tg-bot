@@ -27,14 +27,12 @@ async def second_dry_mass_handler(message: Message, survey: SurveyContext) -> No
 @state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
 async def prev_step_second_dry_mass_handler(message: Message, survey: SurveyContext) -> None:
     await survey.add_messages_to_delete(message.message_id)
-    await survey.clear_messages(
+    await survey.go_to_prev_step(
         bot=message.bot,
         chat_id=message.chat.id,
-        group_names=[CalcFoodAllocationStates.first_dry_mass.state, CalcFoodAllocationStates.second_dry_mass.state],
+        prev_state=CalcFoodAllocationStates.first_dry_mass,
+        clear_prev_state_messages=True,
     )
-
-    await survey.state.update_data(first_dry_mass=None)
-    await survey.state.set_state(CalcFoodAllocationStates.first_dry_mass)
 
     sent_message = await message.answer(FIRST_DRY_MASS_PROMPT)
     await survey.add_messages_to_delete(sent_message.message_id)

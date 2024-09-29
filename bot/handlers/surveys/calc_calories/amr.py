@@ -105,14 +105,12 @@ async def amr_ai_help_handler(callback_query: CallbackQuery, survey: SurveyConte
 @state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
 async def prev_step_amr_handler(message: Message, survey: SurveyContext) -> None:
     await survey.add_messages_to_delete(message.message_id)
-    await survey.clear_messages(
+    await survey.go_to_prev_step(
         bot=message.bot,
         chat_id=message.chat.id,
-        group_names=[CalcCaloriesStates.fat_pct.state, CalcCaloriesStates.amr.state],
+        prev_state=CalcCaloriesStates.fat_pct,
+        clear_prev_state_messages=True,
     )
-
-    await survey.state.update_data(fat_pct=None)
-    await survey.state.set_state(CalcCaloriesStates.fat_pct)
 
     sent_message = await message.answer(FAT_PCT_PROMPT, reply_markup=fat_pct_keyboard())
     await survey.add_messages_to_delete(sent_message.message_id)
