@@ -3,10 +3,12 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils import markdown as md
 
 from bot.keyboards.inline.biological_gender import BIOLOGICAL_GENDER_TO_DATA, BIOLOGICAL_GENDER_TO_TEXT
+from bot.keyboards.reply.survey import SurveyKeyboardText
 from bot.survey.context import SurveyContext
 from bot.survey.routers import SurveyStateRouter
 from bot.utils.dict_utils import get_key_by_value
 
+from .prompts import AGE_PROMPT
 from .states import CalcCaloriesStates
 
 state_router = SurveyStateRouter(CalcCaloriesStates.biological_gender)
@@ -21,8 +23,16 @@ async def biological_gender_handler(callback_query: CallbackQuery, survey: Surve
     await callback_query.answer()
     icon, output = BIOLOGICAL_GENDER_TO_TEXT[biological_gender].split(maxsplit=1)
     await callback_query.message.edit_text(f"{icon} Ваша біологічна стать: {md.hbold(output)}")
-    sent_message = await callback_query.message.answer("📅 Вкажіть ваш вік:")
+    sent_message = await callback_query.message.answer(AGE_PROMPT)
     await survey.add_messages_to_delete(sent_message.message_id)
+
+
+@state_router.message(F.text == SurveyKeyboardText.UNDO_PREV_STEP)
+async def undo_biological_gender_handler(message: Message, survey: SurveyContext) -> None:
+    sent_message = await message.answer(
+        "⚠️ Перший етап не може бути відмінено. Якщо ви хочете скасувати дію, натисніть відповідну кнопку."
+    )
+    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
 @state_router.message()

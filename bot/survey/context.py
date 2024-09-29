@@ -3,10 +3,10 @@ from collections import defaultdict
 from aiogram import Bot
 from aiogram.fsm.context import FSMContext
 
-DEFAULT_GROUP_NAME = "default_group"
-
 
 class SurveyContext:
+    DEFAULT_GROUP_NAME = "default_group"
+
     def __init__(self, state: FSMContext) -> None:
         self.state = state
 
@@ -14,19 +14,28 @@ class SurveyContext:
         data = await self.state.get_data()
         messages_to_delete = data.get("messages_to_delete", defaultdict(list))
 
-        group_name = group_name or await self.state.get_state() or DEFAULT_GROUP_NAME
+        group_name = group_name or await self.state.get_state() or self.DEFAULT_GROUP_NAME
         messages_to_delete[group_name] += message_ids
 
         # It's not enough to mutate the list, as the data is a deep copy of the real data behind the scenes.
         await self.state.update_data(messages_to_delete=messages_to_delete)
 
     async def clear_messages(
-        self, *, bot: Bot, chat_id: int | str, group_names: list[str] | None = None, subset: slice = slice(None)
+        self,
+        *,
+        bot: Bot,
+        chat_id: int | str,
+        group_names: list[str] | None = None,
+        exclude_group_names: list[str] | None = None,
+        subset: slice = slice(None),
     ) -> None:
         data = await self.state.get_data()
         messages_to_delete = data.get("messages_to_delete", defaultdict(list))
 
         group_names = group_names or list(messages_to_delete)
+        exclude_group_names = set(exclude_group_names or [])
+        group_names = [group_name for group_name in group_names if group_name not in exclude_group_names]
+
         combined_message_ids = [
             message_id for group_name in group_names for message_id in messages_to_delete[group_name]
         ]

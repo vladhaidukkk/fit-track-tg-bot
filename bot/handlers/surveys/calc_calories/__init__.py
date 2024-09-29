@@ -13,6 +13,7 @@ from .amr_ai_query import state_router as amr_ai_query_router
 from .biological_gender import state_router as biological_gender_router
 from .fat_pct import state_router as fat_pct_router
 from .height import state_router as height_router
+from .prompts import BIOLOGICAL_GENDER_PROMPT
 from .states import CalcCaloriesStates
 from .weight import state_router as weight_router
 from .weight_target import state_router as weight_target_router
@@ -32,17 +33,16 @@ survey_router.include_state_routers(
 
 @survey_router.before_states.message(F.text == RootKeyboardText.CALC_CALORIES)
 async def start_calc_calories_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.state.set_state(CalcCaloriesStates.biological_gender)
     start_message = await message.answer(
         "🥗 Розрахунок калорійності розпочато. Покроково вказуйте вхідні параметри для отримання результату.",
         reply_markup=survey_keyboard(),
     )
-    biological_gender_message = await message.answer(
-        "🚻 Оберіть вашу біологічну стать, натиснувши кнопку.", reply_markup=biological_gender_keyboard()
-    )
-    await survey.add_messages_to_delete(
-        message.message_id, start_message.message_id, biological_gender_message.message_id
-    )
+    await survey.add_messages_to_delete(message.message_id, start_message.message_id)
+
+    await survey.state.set_state(CalcCaloriesStates.biological_gender)
+
+    prompt_message = await message.answer(BIOLOGICAL_GENDER_PROMPT, reply_markup=biological_gender_keyboard())
+    await survey.add_messages_to_delete(prompt_message.message_id)
 
 
 @survey_router.before_states.message(survey_router.all_states_filter, F.text == SurveyKeyboardText.CANCEL)

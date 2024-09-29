@@ -3,9 +3,11 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils import markdown as md
 
 from bot.core.nutrition_calculator import calc_nutritional_profile
+from bot.keyboards.inline.activity_rate import activity_rate_keyboard
 from bot.keyboards.inline.biological_gender import BIOLOGICAL_GENDER_TO_TEXT
 from bot.keyboards.inline.weight_target import WEIGHT_TARGET_TO_DATA, WEIGHT_TARGET_TO_TEXT
 from bot.keyboards.reply.root import root_keyboard
+from bot.keyboards.reply.survey import SurveyKeyboardText
 from bot.survey.context import SurveyContext
 from bot.survey.routers import SurveyStateRouter
 from bot.utils.dict_utils import get_key_by_value
@@ -13,6 +15,7 @@ from bot.utils.format_utils import format_age, format_number, format_numbers_ran
 from bot.utils.message_utils import build_detailed_message
 from bot.utils.string_utils import get_tail
 
+from .prompts import AMR_PROMPT
 from .states import CalcCaloriesStates
 
 state_router = SurveyStateRouter(CalcCaloriesStates.weight_target)
@@ -20,7 +23,13 @@ state_router = SurveyStateRouter(CalcCaloriesStates.weight_target)
 
 @state_router.callback_query(F.data.in_(WEIGHT_TARGET_TO_DATA.values()))
 async def weight_target_handler(callback_query: CallbackQuery, survey: SurveyContext) -> None:
-    await survey.clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, subset=slice(1, None))
+    await survey.clear_messages(
+        bot=callback_query.bot,
+        chat_id=callback_query.message.chat.id,
+        exclude_group_names=[CalcCaloriesStates.weight_target],
+        subset=slice(1, None),
+    )
+    await survey.clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, subset=slice(2, None))
 
     weight_target = get_key_by_value(WEIGHT_TARGET_TO_DATA, callback_query.data)
     await survey.state.update_data(weight_target=weight_target)
@@ -87,6 +96,22 @@ async def weight_target_handler(callback_query: CallbackQuery, survey: SurveyCon
         reply_markup=root_keyboard(user_id=callback_query.from_user.id),
     )
     # TODO: add a button to show detailed info (lbm, bmr, tef...).
+
+
+@state_router.message(F.text == SurveyKeyboardText.UNDO_PREV_STEP)
+async def undo_weight_target_handler(message: Message, survey: SurveyContext) -> None:
+    await survey.add_messages_to_delete(message.message_id)
+    await survey.clear_messages(
+        bot=message.bot,
+        chat_id=message.chat.id,
+        group_names=[CalcCaloriesStates.amr.state, CalcCaloriesStates.weight_target.state],
+    )
+
+    await survey.state.update_data(amr=None)
+    await survey.state.set_state(CalcCaloriesStates.amr)
+
+    sent_message = await message.answer(AMR_PROMPT, reply_markup=activity_rate_keyboard(show_help=True))
+    await survey.add_messages_to_delete(sent_message.message_id)
 
 
 @state_router.message()
