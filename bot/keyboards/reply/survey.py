@@ -5,7 +5,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
 class SurveyKeyboardText(StrEnum):
     CANCEL = "🚫 Скасувати"
-    UNDO_PREV_STEP = "↩️ Назад"
+    PREV_STEP = "↩️ Назад"
 
 
 def survey_keyboard() -> ReplyKeyboardMarkup:
@@ -13,7 +13,7 @@ def survey_keyboard() -> ReplyKeyboardMarkup:
         keyboard=[
             [
                 KeyboardButton(text=SurveyKeyboardText.CANCEL),
-                KeyboardButton(text=SurveyKeyboardText.UNDO_PREV_STEP),
+                KeyboardButton(text=SurveyKeyboardText.PREV_STEP),
             ],
         ],
         resize_keyboard=True,

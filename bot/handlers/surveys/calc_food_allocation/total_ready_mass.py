@@ -44,8 +44,8 @@ async def total_ready_mass_handler(message: Message, survey: SurveyContext) -> N
     )
 
 
-@state_router.message(F.text == SurveyKeyboardText.UNDO_PREV_STEP)
-async def undo_total_ready_mass_handler(message: Message, survey: SurveyContext) -> None:
+@state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
+async def prev_step_total_ready_mass_handler(message: Message, survey: SurveyContext) -> None:
     await survey.add_messages_to_delete(message.message_id)
     await survey.clear_messages(
         bot=message.bot,

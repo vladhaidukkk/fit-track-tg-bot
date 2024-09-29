@@ -102,8 +102,8 @@ async def amr_ai_help_handler(callback_query: CallbackQuery, survey: SurveyConte
     await survey.add_messages_to_delete(sent_message.message_id)
 
 
-@state_router.message(F.text == SurveyKeyboardText.UNDO_PREV_STEP)
-async def undo_amr_handler(message: Message, survey: SurveyContext) -> None:
+@state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
+async def prev_step_amr_handler(message: Message, survey: SurveyContext) -> None:
     await survey.add_messages_to_delete(message.message_id)
     await survey.clear_messages(
         bot=message.bot,

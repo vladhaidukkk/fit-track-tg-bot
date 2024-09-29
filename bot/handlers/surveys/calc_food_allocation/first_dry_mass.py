@@ -24,8 +24,8 @@ async def first_dry_mass_handler(message: Message, survey: SurveyContext) -> Non
     await survey.add_messages_to_delete(sent_message.message_id)
 
 
-@state_router.message(F.text == SurveyKeyboardText.UNDO_PREV_STEP)
-async def undo_first_dry_mass_handler(message: Message, survey: SurveyContext) -> None:
+@state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
+async def prev_step_first_dry_mass_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer(
         "⚠️ Перший етап не може бути відмінено. Якщо ви хочете скасувати дію, натисніть відповідну кнопку."
     )

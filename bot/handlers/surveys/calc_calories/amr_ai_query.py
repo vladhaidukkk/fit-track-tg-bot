@@ -21,7 +21,7 @@ from .states import CalcCaloriesStates
 state_router = SurveyStateRouter(CalcCaloriesStates.amr_ai_query)
 
 
-@state_router.message(F.text, F.text != SurveyKeyboardText.UNDO_PREV_STEP)
+@state_router.message(F.text, F.text != SurveyKeyboardText.PREV_STEP)
 async def amr_ai_query_handler(message: Message, survey: SurveyContext) -> None:
     async with ChatActionSender.typing(bot=message.bot, chat_id=message.chat.id):
         await survey.state.set_state(CalcCaloriesStates.amr)
@@ -35,8 +35,8 @@ async def amr_ai_query_handler(message: Message, survey: SurveyContext) -> None:
         await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
 
 
-@state_router.message(F.text == SurveyKeyboardText.UNDO_PREV_STEP)
-async def undo_amr_ai_query_handler(message: Message, survey: SurveyContext) -> None:
+@state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
+async def prev_step_amr_ai_query_handler(message: Message, survey: SurveyContext) -> None:
     await survey.add_messages_to_delete(message.message_id)
     await survey.clear_messages(
         bot=message.bot, chat_id=message.chat.id, group_names=[CalcCaloriesStates.amr_ai_query.state]

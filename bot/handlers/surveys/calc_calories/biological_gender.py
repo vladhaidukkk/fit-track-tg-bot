@@ -27,8 +27,8 @@ async def biological_gender_handler(callback_query: CallbackQuery, survey: Surve
     await survey.add_messages_to_delete(sent_message.message_id)
 
 
-@state_router.message(F.text == SurveyKeyboardText.UNDO_PREV_STEP)
-async def undo_biological_gender_handler(message: Message, survey: SurveyContext) -> None:
+@state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
+async def prev_step_biological_gender_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer(
         "⚠️ Перший етап не може бути відмінено. Якщо ви хочете скасувати дію, натисніть відповідну кнопку."
     )

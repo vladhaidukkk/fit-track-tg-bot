@@ -24,8 +24,8 @@ async def second_dry_mass_handler(message: Message, survey: SurveyContext) -> No
     await survey.add_messages_to_delete(sent_message.message_id)
 
 
-@state_router.message(F.text == SurveyKeyboardText.UNDO_PREV_STEP)
-async def undo_second_dry_mass_handler(message: Message, survey: SurveyContext) -> None:
+@state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
+async def prev_step_second_dry_mass_handler(message: Message, survey: SurveyContext) -> None:
     await survey.add_messages_to_delete(message.message_id)
     await survey.clear_messages(
         bot=message.bot,
