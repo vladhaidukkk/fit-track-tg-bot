@@ -17,7 +17,7 @@ async def start_command_handler(message: Message, survey: SurveyContext, user: U
     await survey.state.clear()
 
     text = (
-        "З поверненням! Готові до нових вершин? 💪"
+        "З поверненням! Час підкорювати нові вершини! 💪"
         if user
         else md.text(
             f"Вас вітає {md.hbold(settings.bot.name)}! 👋",
