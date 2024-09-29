@@ -5,7 +5,6 @@ from aiogram.utils import markdown as md
 
 from bot.config import settings
 from bot.db.models import UserModel
-from bot.db.queries import add_user, update_user
 from bot.keyboards.reply.root import root_keyboard
 from bot.survey.context import SurveyContext
 
@@ -16,11 +15,6 @@ primary_router = Router(name=f"{__name__}:primary")
 async def start_command_handler(message: Message, survey: SurveyContext, user: UserModel | None) -> None:
     await survey.clear_messages(bot=message.bot, chat_id=message.chat.id)
     await survey.state.clear()
-
-    if not user:
-        await add_user(id_=message.from_user.id, username=message.from_user.username)
-    if user and user.username != message.from_user.username:
-        await update_user(id_=message.from_user.id, username=message.from_user.username)
 
     text = (
         "З поверненням! Готові до нових вершин? 💪"

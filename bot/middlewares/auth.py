@@ -2,8 +2,10 @@ from collections.abc import Awaitable, Callable
 
 from aiogram import BaseMiddleware
 from aiogram.types import Update
+from aiogram.types import User as TgUser
+from aiogram.types.update import UpdateTypeLookupError
 
-from bot.db.queries.user import get_user
+from bot.db.queries import add_user, get_user, update_user
 
 
 class AuthMiddleware(BaseMiddleware):
@@ -13,15 +15,28 @@ class AuthMiddleware(BaseMiddleware):
         event: Update,
         data: dict[str, any],
     ) -> any:
-        user_tg_id = self._get_user_tg_id_from_update(event)
-        data["user"] = await get_user(id_=user_tg_id) if user_tg_id else None
+        tg_user = self._get_tg_user(event)
+        if not tg_user:
+            return await handler(event, data)
+
+        existing_user = await get_user(id_=tg_user.id)
+        if not existing_user:
+            existing_user = await add_user(id_=tg_user.id, username=tg_user.username)
+        elif existing_user.username != tg_user.username:
+            # Ensures the system remains up-to-date when a user changes their username.
+            await update_user(id_=existing_user.id, username=tg_user.username)
+
+        data["user"] = existing_user
         return await handler(event, data)
 
     @staticmethod
-    def _get_user_tg_id_from_update(update: Update) -> int | None:
-        if update.message:
-            return update.message.from_user.id
-        if update.callback_query:
-            return update.callback_query.from_user.id
-        # TODO: log this scenario as a warning to address the issue.
-        return None
+    def _get_tg_user(update: Update) -> TgUser | None:
+        try:
+            return update.message.from_user
+        except UpdateTypeLookupError:
+            # TODO: log this as a warning, just to be aware that aiogram probably doesn't support a new event type.
+            #  But 99.9% that this log won't appear as we use only available in aiogram features.
+            return None
+        except AttributeError:
+            # TODO: log this scenario as a warning. Add event type to extras and maybe something else as well.
+            return None
