@@ -14,7 +14,7 @@ from .states import CalcFoodAllocationStates
 from .total_ready_mass import state_router as total_ready_mass_router
 
 survey_router = SurveyRouter(CalcFoodAllocationStates)
-survey_router.message.filter(PrivilegedUserFilter())
+survey_router.filter(PrivilegedUserFilter())
 survey_router.include_state_routers(first_dry_mass_router, second_dry_mass_router, total_ready_mass_router)
 
 

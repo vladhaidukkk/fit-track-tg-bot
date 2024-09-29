@@ -1,4 +1,5 @@
 from aiogram import Router
+from aiogram.dispatcher.event.event import CallbackType
 from aiogram.filters import Filter, or_f
 from aiogram.fsm.state import State, StatesGroup
 
@@ -19,6 +20,10 @@ class SurveyRouter(Router):
         self.states = states
         self.before_states_router = Router(name=f"{states.__name__}:before")
         self.after_states_router = Router(name=f"{states.__name__}:after")
+
+    def filter(self, *filters: CallbackType) -> None:
+        for observer in self.observers.values():
+            observer.filter(*filters)
 
     @property
     def before_states(self) -> Router:
