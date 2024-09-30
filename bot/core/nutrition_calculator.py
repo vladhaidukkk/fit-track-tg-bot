@@ -277,30 +277,17 @@ def calc_salt(*, weight: float, fat_pct: float) -> float:
     return lbm / 10
 
 
-def calc_caffeine_norm(*, weight: float) -> float:
-    """Calculate normal daily caffeine intake.
+def calc_caffeine(*, weight: float) -> tuple[float, float]:
+    """Calculate norm and max daily caffeine intake.
 
     Args:
         weight: Weight of the person in kilograms.
 
     Returns:
-        The normal daily caffeine intake in milligrams/day.
+        Norm and max daily caffeine intake in milligrams/day.
 
     """
-    return weight * 2.5
-
-
-def calc_caffeine_max(*, weight: float) -> float:
-    """Calculate maximum daily caffeine intake.
-
-    Args:
-        weight: Weight of the person in kilograms.
-
-    Returns:
-        The maximum daily caffeine intake in milligrams/day.
-
-    """
-    return weight * 5
+    return weight * 2.5, weight * 5
 
 
 class NutritionalProfile(TypedDict):
@@ -312,8 +299,7 @@ class NutritionalProfile(TypedDict):
     fiber: tuple[float, float]
     sugar: tuple[float, float]
     salt: float
-    caffeine_norm: float
-    caffeine_max: float
+    caffeine: tuple[float, float]
 
 
 def calc_nutritional_profile(
@@ -383,6 +369,5 @@ def calc_nutritional_profile(
             target=target,
         ),
         salt=calc_salt(weight=weight, fat_pct=fat_pct),
-        caffeine_norm=calc_caffeine_norm(weight=weight),
-        caffeine_max=calc_caffeine_max(weight=weight),
+        caffeine=calc_caffeine(weight=weight),
     )
