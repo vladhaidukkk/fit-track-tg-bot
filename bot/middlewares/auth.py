@@ -32,7 +32,7 @@ class AuthMiddleware(BaseMiddleware):
     @staticmethod
     def _get_tg_user(update: Update) -> TgUser | None:
         try:
-            return update.message.from_user
+            return update.event.from_user
         except UpdateTypeLookupError:
             # TODO: log this as a warning, just to be aware that aiogram probably doesn't support a new event type.
             #  But 99.9% that this log won't appear as we use only available in aiogram features.

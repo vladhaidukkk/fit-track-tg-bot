@@ -1,9 +1,13 @@
 from aiogram.filters import Filter
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import TelegramObject
 
 from bot.config import settings
 
 
 class PrivilegedUserFilter(Filter):
-    async def __call__(self, event: Message | CallbackQuery) -> bool:
-        return event.from_user.id in settings.bot.privileged_user_ids
+    async def __call__(self, event: TelegramObject) -> bool:
+        try:
+            return event.from_user.id in settings.bot.privileged_user_ids
+        except AttributeError:
+            # TODO: log this scenario as a warning. Add event type to extras and maybe something else as well.
+            return False

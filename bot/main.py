@@ -9,7 +9,7 @@ from bot.config import settings
 from bot.handlers import router
 from bot.logger import configure_logging
 from bot.middlewares.auth import AuthMiddleware
-from bot.survey.middleware import SurveyMiddleware
+from bot.survey.middlewares import SurveyMiddleware
 
 if settings.sentry.dsn:
     sentry_sdk.init(

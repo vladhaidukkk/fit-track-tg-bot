@@ -13,7 +13,7 @@ from .second_dry_mass import state_router as second_dry_mass_router
 from .states import CalcFoodAllocationStates
 from .total_ready_mass import state_router as total_ready_mass_router
 
-survey_router = SurveyRouter(CalcFoodAllocationStates)
+survey_router = SurveyRouter(CalcFoodAllocationStates, to_delete_incoming_messages=True)
 survey_router.filter(PrivilegedUserFilter())
 survey_router.include_state_routers(first_dry_mass_router, second_dry_mass_router, total_ready_mass_router)
 
@@ -24,7 +24,7 @@ async def start_calc_food_allocation_handler(message: Message, survey: SurveyCon
         "🍽️ Розрахунок розподілу їжі розпочато. Покроково вказуйте вхідні дані для отримання результату.",
         reply_markup=survey_keyboard(),
     )
-    await survey.add_messages_to_delete(message.message_id, start_message.message_id)
+    await survey.add_messages_to_delete(start_message.message_id)
 
     await survey.state.set_state(CalcFoodAllocationStates.first_dry_mass)
 
@@ -44,4 +44,4 @@ async def cancel_calc_food_allocation_handler(message: Message, survey: SurveyCo
 @survey_router.after_states.message(survey_router.all_states_filter)
 async def fallback_calc_food_allocation_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Вага повинна бути числом. Введіть її ще раз:")
-    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
+    await survey.add_messages_to_delete(sent_message.message_id)

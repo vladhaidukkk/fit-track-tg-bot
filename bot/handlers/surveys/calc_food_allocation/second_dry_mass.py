@@ -15,8 +15,6 @@ state_router = SurveyStateRouter(CalcFoodAllocationStates.second_dry_mass)
 
 @state_router.message(F.text.regexp(float_regexp))
 async def second_dry_mass_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.add_messages_to_delete(message.message_id)
-
     await survey.state.update_data(second_dry_mass=parse_float(message.text))
     await survey.state.set_state(CalcFoodAllocationStates.total_ready_mass)
 
@@ -26,7 +24,6 @@ async def second_dry_mass_handler(message: Message, survey: SurveyContext) -> No
 
 @state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
 async def prev_step_second_dry_mass_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.add_messages_to_delete(message.message_id)
     await survey.go_to_prev_step(
         bot=message.bot,
         chat_id=message.chat.id,

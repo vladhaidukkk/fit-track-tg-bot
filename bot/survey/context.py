@@ -11,14 +11,28 @@ class SurveyContext:
     def __init__(self, state: FSMContext) -> None:
         self.state = state
 
-    async def add_messages_to_delete(self, *message_ids: int, group_name: str | None = None) -> None:
+    async def _get_messages_to_delete(self) -> defaultdict[str, list[int]]:
         data = await self.state.get_data()
-        messages_to_delete: defaultdict[str, list[int]] = data.get("messages_to_delete", defaultdict(list))
+        return data.get("messages_to_delete", defaultdict(list))
+
+    async def add_messages_to_delete(self, *message_ids: int, group_name: str | None = None) -> None:
+        messages_to_delete = await self._get_messages_to_delete()
 
         group_name = group_name or await self.state.get_state() or self.DEFAULT_GROUP_NAME
         messages_to_delete[group_name] += message_ids
 
         # It's not enough to mutate the list, as the data is a deep copy of the real data behind the scenes.
+        await self.state.update_data(messages_to_delete=messages_to_delete)
+
+    async def remove_messages_from_delete(self, *message_ids: int) -> None:
+        messages_to_delete = await self._get_messages_to_delete()
+
+        for group_name in messages_to_delete:
+            # We refer to group messages directly in this case to mutate the original list.
+            messages_to_delete[group_name] = [
+                message_id for message_id in messages_to_delete[group_name] if message_id not in message_ids
+            ]
+
         await self.state.update_data(messages_to_delete=messages_to_delete)
 
     async def clear_messages(
@@ -31,8 +45,7 @@ class SurveyContext:
         exclude_message_ids: list[int] | None = None,
         subset: slice = slice(None),
     ) -> None:
-        data = await self.state.get_data()
-        messages_to_delete: defaultdict[str, list[int]] = data.get("messages_to_delete", defaultdict(list))
+        messages_to_delete = await self._get_messages_to_delete()
 
         group_names = group_names or list(messages_to_delete)
         exclude_group_names = set(exclude_group_names or [])

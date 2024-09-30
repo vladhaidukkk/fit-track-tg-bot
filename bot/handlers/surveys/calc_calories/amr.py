@@ -27,7 +27,6 @@ state_router = SurveyStateRouter(CalcCaloriesStates.amr)
 
 @state_router.callback_query(F.data.in_(ACTIVITY_RATE_TO_DATA.values()))
 async def amr_handler(callback_query: CallbackQuery, survey: SurveyContext) -> None:
-    await survey.add_messages_to_delete(callback_query.message.message_id)
     await survey.clear_messages(bot=callback_query.bot, chat_id=callback_query.message.chat.id, subset=slice(2, None))
 
     amr = get_key_by_value(ACTIVITY_RATE_TO_DATA, callback_query.data)
@@ -104,7 +103,6 @@ async def amr_ai_help_handler(callback_query: CallbackQuery, survey: SurveyConte
 
 @state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
 async def prev_step_amr_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.add_messages_to_delete(message.message_id)
     await survey.go_to_prev_step(
         bot=message.bot,
         chat_id=message.chat.id,
@@ -119,4 +117,4 @@ async def prev_step_amr_handler(message: Message, survey: SurveyContext) -> None
 @state_router.message()
 async def unknown_amr_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Оберіть коефіцієнт активності, натиснувши кнопку під повідомленням.")
-    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
+    await survey.add_messages_to_delete(sent_message.message_id)

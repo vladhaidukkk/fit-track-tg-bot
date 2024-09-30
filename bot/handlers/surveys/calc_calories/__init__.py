@@ -18,7 +18,7 @@ from .states import CalcCaloriesStates
 from .weight import state_router as weight_router
 from .weight_target import state_router as weight_target_router
 
-survey_router = SurveyRouter(CalcCaloriesStates)
+survey_router = SurveyRouter(CalcCaloriesStates, to_delete_incoming_messages=True)
 survey_router.include_state_routers(
     biological_gender_router,
     age_router,
@@ -37,7 +37,7 @@ async def start_calc_calories_handler(message: Message, survey: SurveyContext) -
         "🥗 Розрахунок калорійності розпочато. Покроково вказуйте вхідні параметри для отримання результату.",
         reply_markup=survey_keyboard(),
     )
-    await survey.add_messages_to_delete(message.message_id, start_message.message_id)
+    await survey.add_messages_to_delete(start_message.message_id)
 
     await survey.state.set_state(CalcCaloriesStates.biological_gender)
 

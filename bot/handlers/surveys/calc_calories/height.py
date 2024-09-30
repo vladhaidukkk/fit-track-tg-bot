@@ -15,8 +15,6 @@ state_router = SurveyStateRouter(CalcCaloriesStates.height)
 
 @state_router.message(F.text.regexp(float_regexp))
 async def height_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.add_messages_to_delete(message.message_id)
-
     await survey.state.update_data(height=parse_float(message.text))
     await survey.state.set_state(CalcCaloriesStates.weight)
 
@@ -26,7 +24,6 @@ async def height_handler(message: Message, survey: SurveyContext) -> None:
 
 @state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
 async def prev_step_height_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.add_messages_to_delete(message.message_id)
     await survey.go_to_prev_step(
         bot=message.bot,
         chat_id=message.chat.id,
@@ -41,4 +38,4 @@ async def prev_step_height_handler(message: Message, survey: SurveyContext) -> N
 @state_router.message()
 async def invalid_height_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Зріст повинен бути числом. Введіть його ще раз:")
-    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
+    await survey.add_messages_to_delete(sent_message.message_id)

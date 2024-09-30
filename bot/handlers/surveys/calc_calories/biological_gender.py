@@ -32,10 +32,10 @@ async def prev_step_biological_gender_handler(message: Message, survey: SurveyCo
     sent_message = await message.answer(
         "⚠️ Перший етап не може бути відмінено. Якщо ви хочете скасувати дію, натисніть відповідну кнопку."
     )
-    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
+    await survey.add_messages_to_delete(sent_message.message_id)
 
 
 @state_router.message()
 async def unknown_biological_gender_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Оберіть біологічну стать, натиснувши кнопку під повідомленням.")
-    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
+    await survey.add_messages_to_delete(sent_message.message_id)

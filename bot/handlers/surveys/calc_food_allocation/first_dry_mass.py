@@ -15,8 +15,6 @@ state_router = SurveyStateRouter(CalcFoodAllocationStates.first_dry_mass)
 
 @state_router.message(F.text.regexp(float_regexp))
 async def first_dry_mass_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.add_messages_to_delete(message.message_id)
-
     await survey.state.update_data(first_dry_mass=parse_float(message.text))
     await survey.state.set_state(CalcFoodAllocationStates.second_dry_mass)
 
@@ -29,4 +27,4 @@ async def prev_step_first_dry_mass_handler(message: Message, survey: SurveyConte
     sent_message = await message.answer(
         "⚠️ Перший етап не може бути відмінено. Якщо ви хочете скасувати дію, натисніть відповідну кнопку."
     )
-    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
+    await survey.add_messages_to_delete(sent_message.message_id)

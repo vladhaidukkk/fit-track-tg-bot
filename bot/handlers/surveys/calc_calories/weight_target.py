@@ -99,7 +99,6 @@ async def weight_target_handler(callback_query: CallbackQuery, survey: SurveyCon
 
 @state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
 async def prev_step_weight_target_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.add_messages_to_delete(message.message_id)
     await survey.go_to_prev_step(
         bot=message.bot,
         chat_id=message.chat.id,
@@ -114,4 +113,4 @@ async def prev_step_weight_target_handler(message: Message, survey: SurveyContex
 @state_router.message()
 async def unknown_weight_target_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Оберіть вашу мету, натиснувши кнопку під повідомленням.")
-    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
+    await survey.add_messages_to_delete(sent_message.message_id)

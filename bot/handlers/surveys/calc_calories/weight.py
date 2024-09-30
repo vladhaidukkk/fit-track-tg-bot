@@ -16,8 +16,6 @@ state_router = SurveyStateRouter(CalcCaloriesStates.weight)
 
 @state_router.message(F.text.regexp(float_regexp))
 async def weight_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.add_messages_to_delete(message.message_id)
-
     await survey.state.update_data(weight=parse_float(message.text))
     await survey.state.set_state(CalcCaloriesStates.fat_pct)
 
@@ -27,7 +25,6 @@ async def weight_handler(message: Message, survey: SurveyContext) -> None:
 
 @state_router.message(F.text == SurveyKeyboardText.PREV_STEP)
 async def prev_step_weight_handler(message: Message, survey: SurveyContext) -> None:
-    await survey.add_messages_to_delete(message.message_id)
     await survey.go_to_prev_step(
         bot=message.bot,
         chat_id=message.chat.id,
@@ -42,4 +39,4 @@ async def prev_step_weight_handler(message: Message, survey: SurveyContext) -> N
 @state_router.message()
 async def invalid_weight_handler(message: Message, survey: SurveyContext) -> None:
     sent_message = await message.answer("⚠️ Вага повинна бути числом. Введіть її ще раз:")
-    await survey.add_messages_to_delete(message.message_id, sent_message.message_id)
+    await survey.add_messages_to_delete(sent_message.message_id)
