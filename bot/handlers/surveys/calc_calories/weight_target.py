@@ -69,6 +69,7 @@ async def weight_target_handler(callback_query: CallbackQuery, survey: SurveyCon
     min_calories, max_calories = nutritional_profile["calories"]
     min_carbohydrates, max_carbohydrates = nutritional_profile["carbohydrates"]
     min_fiber, max_fiber = nutritional_profile["fiber"]
+    norm_sugar, max_sugar = nutritional_profile["sugar"]
 
     await callback_query.message.answer(
         build_detailed_message(
@@ -80,6 +81,7 @@ async def weight_target_handler(callback_query: CallbackQuery, survey: SurveyCon
                 ("Вуглеводи", format_numbers_range(min_carbohydrates, max_carbohydrates, "г", precision=0)),
                 ("Вода", format_number(nutritional_profile["water"], "л", precision=2)),
                 ("Клітковина", format_numbers_range(min_fiber, max_fiber, "г")),
+                ("Цукор", format_numbers_range(norm_sugar, max_sugar, "г")),
                 ("Сіль", format_number(nutritional_profile["salt"], "г")),
                 ("Норма кофеїну", format_number(nutritional_profile["caffeine_norm"], "мг", precision=0)),
                 ("Макс. доза кофеїну", format_number(nutritional_profile["caffeine_max"], "мг", precision=0)),

@@ -224,6 +224,44 @@ def calc_fiber(
     return min_calories / 1000 * 10, max_calories / 1000 * 10
 
 
+def calc_sugar(
+    *,
+    gender: BiologicalGender,
+    age: int,
+    height: float,
+    weight: float,
+    fat_pct: float,
+    amr: ActivityRate,
+    target: WeightTarget = WeightTarget.MAINTAIN,
+) -> tuple[float, float]:
+    """Calculate norm and max daily sugar intake.
+
+    Args:
+        gender: Gender of the person.
+        age: Age of the person in years.
+        height: Height of the person in centimeters.
+        weight: Weight of the person in kilograms.
+        fat_pct: Body fat percentage.
+        amr: Activity multiplier rate (e.g., sedentary, lightly active, etc.).
+        target: Desired impact on weight from a process perspective.
+
+    Returns:
+        Norm and max daily sugar intake in grams/day.
+
+    """
+    min_calories, max_calories = calc_calories(
+        gender=gender,
+        age=age,
+        height=height,
+        weight=weight,
+        fat_pct=fat_pct,
+        amr=amr,
+        target=target,
+    )
+    avg_calories = (min_calories + max_calories) / 2
+    return avg_calories * 0.05 / 4, avg_calories * 0.1 / 4
+
+
 def calc_salt(*, weight: float, fat_pct: float) -> float:
     """Calculate daily salt needs.
 
@@ -272,6 +310,7 @@ class NutritionalProfile(TypedDict):
     carbohydrates: tuple[float, float]
     water: float
     fiber: tuple[float, float]
+    sugar: tuple[float, float]
     salt: float
     caffeine_norm: float
     caffeine_max: float
@@ -326,6 +365,15 @@ def calc_nutritional_profile(
         ),
         water=calc_water(weight=weight, fat_pct=fat_pct),
         fiber=calc_fiber(
+            gender=gender,
+            age=age,
+            height=height,
+            weight=weight,
+            fat_pct=fat_pct,
+            amr=amr,
+            target=target,
+        ),
+        sugar=calc_sugar(
             gender=gender,
             age=age,
             height=height,
