@@ -39,7 +39,7 @@ async def cancel_command_handler(message: Message, survey: SurveyContext) -> Non
     active_state = await survey.state.get_state()
     await survey.state.clear()
 
-    text = "🚫 Активну дію скасовано." if active_state else "ℹ️ Ніяка дія не активована."
+    text = "🚫 Активну дію скасовано." if active_state else "ℹ️ Активної дії немає."
     await message.answer(text, reply_markup=root_keyboard(user_id=message.from_user.id))
 
 

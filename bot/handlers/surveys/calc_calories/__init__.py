@@ -35,7 +35,7 @@ survey_router.include_state_routers(
 async def start_calc_calories_handler(message: Message, survey: SurveyContext) -> None:
     start_message = await message.answer(
         "🥗 Розрахунок калорійності розпочато. Покроково вказуйте вхідні параметри для отримання результату.",
-        reply_markup=survey_keyboard(),
+        reply_markup=survey_keyboard(show_prev_step=True),
     )
     await survey.add_messages_to_delete(start_message.message_id)
 

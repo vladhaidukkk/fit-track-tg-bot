@@ -71,5 +71,5 @@ async def amr_ai_query_amr_handler(callback_query: CallbackQuery, survey: Survey
 
 @state_router.message()
 async def invalid_amr_ai_query_handler(message: Message, survey: SurveyContext) -> None:
-    sent_message = await message.answer("⚠️ Опис повинен бути повідомленням. Введіть його ще раз:")
+    sent_message = await message.answer("⚠️ Опис повинен бути текстовим. Введіть його ще раз:")
     await survey.add_messages_to_delete(sent_message.message_id)

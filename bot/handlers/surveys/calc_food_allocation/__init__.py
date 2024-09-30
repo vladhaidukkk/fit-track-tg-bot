@@ -22,7 +22,7 @@ survey_router.include_state_routers(first_dry_mass_router, second_dry_mass_route
 async def start_calc_food_allocation_handler(message: Message, survey: SurveyContext) -> None:
     start_message = await message.answer(
         "🍽️ Розрахунок розподілу їжі розпочато. Покроково вказуйте вхідні дані для отримання результату.",
-        reply_markup=survey_keyboard(),
+        reply_markup=survey_keyboard(show_prev_step=True),
     )
     await survey.add_messages_to_delete(start_message.message_id)
 
