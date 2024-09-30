@@ -10,6 +10,7 @@ from bot.handlers import router
 from bot.logger import configure_logging
 from bot.middlewares.auth import AuthMiddleware
 from bot.survey.middlewares import SurveyMiddleware
+from bot.utils.aiogram_utils import extract_user_from_update
 
 if settings.sentry.dsn:
     sentry_sdk.init(
@@ -22,6 +23,23 @@ if settings.sentry.dsn:
     )
 
 
+async def process_pending_bot_updates(bot: Bot) -> None:
+    pending_updates = await bot.get_updates()
+
+    chat_ids = {tg_user.id for update in pending_updates if (tg_user := extract_user_from_update(update)) is not None}
+    await asyncio.gather(
+        *[
+            bot.send_message(
+                chat_id=chat_id,
+                text="😖 Вибачте, що не відповідав. Тепер я знову на зв'язку і готовий допомогти!",
+            )
+            for chat_id in chat_ids
+        ]
+    )
+
+    await bot.delete_webhook(drop_pending_updates=True)
+
+
 async def main() -> None:
     dp = Dispatcher()
     dp.update.outer_middleware(SurveyMiddleware())
@@ -29,7 +47,7 @@ async def main() -> None:
     dp.include_router(router)
 
     bot = Bot(token=settings.bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    await bot.delete_webhook(drop_pending_updates=True)
+    await process_pending_bot_updates(bot)
     await dp.start_polling(bot)
 
 
