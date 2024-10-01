@@ -28,12 +28,13 @@ async def suggestion_handler(message: Message, survey: SurveyContext) -> None:
     )
 
     # TODO: Ideally, this logic should be executed on a separate service responsible for notifications.
+    sender = f"@{message.from_user.username}" or md.hcode(message.from_user.id)
     await asyncio.gather(
         *[
             message.bot.send_message(
                 chat_id=recipient_id,
                 text=md.text(
-                    md.html_decoration.bold(f"💌 Користувач {md.hcode(message.from_user.id)} залишив побажання:"),
+                    md.html_decoration.bold(f"💌 Користувач {sender} залишив побажання:"),
                     message.text,
                     sep="\n\n",
                 ),
