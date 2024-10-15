@@ -28,7 +28,7 @@ async def suggestion_handler(message: Message, survey: SurveyContext) -> None:
     )
 
     # TODO: Ideally, this logic should be executed on a separate service responsible for notifications.
-    sender = f"@{message.from_user.username}" or md.hcode(message.from_user.id)
+    sender = f"@{message.from_user.username}" if message.from_user.username else md.hcode(message.from_user.id)
     await asyncio.gather(
         *[
             message.bot.send_message(
