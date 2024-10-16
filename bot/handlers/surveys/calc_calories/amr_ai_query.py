@@ -2,6 +2,7 @@ from aiogram import F
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils import markdown as md
 from aiogram.utils.chat_action import ChatActionSender
+from openai import OpenAIError
 
 from bot.keyboards.inline.activity_rate import ACTIVITY_RATE_TO_DATA
 from bot.keyboards.inline.biological_gender import BIOLOGICAL_GENDER_TO_TEXT
@@ -26,12 +27,18 @@ async def amr_ai_query_handler(message: Message, survey: SurveyContext) -> None:
     async with ChatActionSender.typing(bot=message.bot, chat_id=message.chat.id):
         await survey.state.set_state(CalcCaloriesStates.amr)
 
-        query = (
-            "Будь ласка, визначте коефіцієнт активності (1.2, 1.375, 1.55, 1.725 або 1.9) для наступного опису: "
-            f'"{message.text}".'
-        )
-        ai_response = await generate_text(query=query)
-        sent_message = await message.answer(md.text(md.hbold("🤖 Відповідь AI:"), f'"{ai_response.rstrip(".")}".'))
+        try:
+            query = (
+                "Будь ласка, визначте коефіцієнт активності (1.2, 1.375, 1.55, 1.725 або 1.9) для наступного опису: "
+                f'"{message.text}".'
+            )
+            ai_response = await generate_text(query=query)
+            text = md.text(md.hbold("🤖 Відповідь AI:"), f'"{ai_response.rstrip(".")}".')
+        except OpenAIError:
+            # TODO: This error should be logged.
+            text = "🚨 Нажаль, AI тимчасово недоступний. Будь ласка, спробуйте пізніше."
+
+        sent_message = await message.answer(text)
         await survey.add_messages_to_delete(sent_message.message_id)
 
 
