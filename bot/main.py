@@ -9,6 +9,7 @@ from bot.config import settings
 from bot.handlers import router
 from bot.logger import configure_logging
 from bot.middlewares.auth import AuthMiddleware
+from bot.middlewares.usage_stats import UsageStatsMiddleware
 from bot.survey.middlewares import SurveyMiddleware
 from bot.utils.aiogram_utils import extract_user_from_update
 
@@ -44,6 +45,7 @@ async def main() -> None:
     dp = Dispatcher()
     dp.update.outer_middleware(SurveyMiddleware())
     dp.update.outer_middleware(AuthMiddleware())
+    dp.update.outer_middleware(UsageStatsMiddleware())
     dp.include_router(router)
 
     bot = Bot(token=settings.bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))

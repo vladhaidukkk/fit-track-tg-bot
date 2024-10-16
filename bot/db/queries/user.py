@@ -26,12 +26,18 @@ async def get_user(session: AsyncSession, *, id_: int) -> UserModel | None:
 
 
 @inject_session
-async def update_user(session: AsyncSession, *, id_: int, username: str | None = None) -> UserModel:
+async def update_user(
+    session: AsyncSession, *, id_: int, username: str | None = ..., event_count: int = ...
+) -> UserModel:
     user_query = select(UserModel).filter_by(id=id_)
     user = await session.scalar(user_query)
     if not user:
         raise UserNotFoundError(id_=id_)
 
-    user.username = username
+    if username is not ...:
+        user.username = username
+    if event_count is not ...:
+        user.event_count = event_count
+
     await session.commit()
     return user
