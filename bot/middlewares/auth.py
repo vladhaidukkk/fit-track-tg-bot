@@ -18,12 +18,15 @@ class AuthMiddleware(BaseMiddleware):
         if not tg_user:
             return await handler(event, data)
 
-        existing_user = await get_user(id_=tg_user.id)
-        if not existing_user:
-            existing_user = await add_user(id_=tg_user.id, username=tg_user.username)
-        elif existing_user.username != tg_user.username:
-            # Ensures the system remains up-to-date when a user changes their username.
-            await update_user(id_=existing_user.id, username=tg_user.username)
+        user = await get_user(id_=tg_user.id)
+        is_user_existing = user is not None
 
-        data["user"] = existing_user
+        if not user:
+            user = await add_user(id_=tg_user.id, username=tg_user.username)
+        elif user.username != tg_user.username:
+            # Ensures the system remains up-to-date when a user changes their username.
+            user = await update_user(id_=user.id, username=tg_user.username)
+
+        data["user"] = user
+        data["is_user_new"] = not is_user_existing
         return await handler(event, data)
