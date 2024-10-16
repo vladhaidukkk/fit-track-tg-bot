@@ -1,5 +1,9 @@
 default: fmt fix
 
+# Dependencies Management Commands
+reqs:
+    poetry export -f requirements.txt --output requirements.txt --without-hashes
+
 # Startup Commands
 compose_file := "docker-compose-local.yaml"
 
