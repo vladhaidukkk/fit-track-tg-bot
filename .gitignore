@@ -11,3 +11,9 @@ venv/
 
 *.pyc
 __pycache__/
+
+*.sqlite3
+*.sqlite
+*.db
+*.db-shm
+*.db-wal
