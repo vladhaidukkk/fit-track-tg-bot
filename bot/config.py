@@ -9,8 +9,9 @@ class BotSettings(BaseModel):
     name: str = "FitTrack Bot"
     token: str
     # TODO: These fields can be converted into separate database columns for scalability.
-    suggestion_recipient_ids: frozenset[int] = frozenset()
+    admin_ids: frozenset[int] = frozenset()
     privileged_user_ids: frozenset[int] = frozenset()
+    suggestion_recipient_ids: frozenset[int] = frozenset()
 
 
 class DatabaseSettings(BaseModel):
