@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import ColumnExpressionArgument, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +17,12 @@ async def add_user(session: AsyncSession, *, id_: int, username: str | None = No
         raise UserAlreadyExistsError(id_=id_) from error
     else:
         return new_user
+
+
+@inject_session
+async def get_users(session: AsyncSession, *filters: ColumnExpressionArgument[bool]) -> list[UserModel]:
+    query = select(UserModel).filter(*filters)
+    return await session.scalars(query)
 
 
 @inject_session
